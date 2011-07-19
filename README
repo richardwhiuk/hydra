@@ -1,3 +1,14 @@
 Hydra
 
 This daemon is designed to multiplex between different HTTP servers distinguished by the Host: header.
+
+Building Hydra:
+
+cd build
+cmake ..
+make
+make install
+
+At this point, there is a copy of the hydra daemon - bin/hydra.
+
+
