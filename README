@@ -1,0 +1,3 @@
+Hydra
+
+This daemon is designed to multiplex between different HTTP servers distinguished by the Host: header.
