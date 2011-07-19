@@ -10,18 +10,22 @@ set (HYDRA_VERSION_MINOR 9)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -Wall -Werror")
 
 configure_file (
-  "${PROJECT_SOURCE_DIR}/include/hydra.hpp.in"
-  "${PROJECT_BINARY_DIR}/include/hydra.hpp"
+  "${PROJECT_SOURCE_DIR}/include/version.hpp.in"
+  "${PROJECT_BINARY_DIR}/include/version.hpp"
   )
 
 include_directories("include" "${PROJECT_BINARY_DIR}/include")
 
 set(HEADER_FILES
-  include/hydra.hpp
+	include/config.hpp
+	include/hydra.hpp
+	include/version.hpp
 )
 
 set(SOURCE_FILES
-  src/main.cpp 
+	src/config.cpp
+	src/hydra.cpp
+	src/main.cpp
 )
 
 add_executable(hydra ${HEADER_FILES} ${SOURCE_FILES} ${CGI_HEADER_FILES} ${CGI_SOURCE_FILES})
