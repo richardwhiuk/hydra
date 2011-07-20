@@ -1,4 +1,14 @@
+#
+# CMakeLists.txt
+# ~~~~~~~~~~~~~~
+#
+# Copyright (c) 2011-2011 Richard J. Whitehouse (richard at richardwhiuk dot com)
+#
+# Distributed under the Boost Software License, Version 1.0. (See accompanying
+# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+#
 # Hydra Project Build File
+#
 
 cmake_minimum_required (VERSION 2.6)
 

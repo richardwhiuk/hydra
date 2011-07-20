@@ -1,5 +1,15 @@
-#ifndef HYDRA_FILE_HYDRA
-#define HYDRA_FILE_HYDRA
+//
+// server.hpp
+// ~~~~~~~~~~
+//
+// Copyright (c) 2011-2011 Richard J. Whitehouse (richard at richardwhiuk dot com)
+//
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//
+
+#ifndef HYDRA_FILE_SERVER_HPP
+#define HYDRA_FILE_SERVER_HPP
 
 #include <boost/asio.hpp>
 #include <string>
