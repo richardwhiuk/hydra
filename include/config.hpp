@@ -34,6 +34,8 @@ public:
 
 	bool parse();
 
+	std::string get(std::string section, std::string label);
+
 	~Config(){
 
 	}

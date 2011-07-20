@@ -6,6 +6,10 @@
 
 using namespace std;
 
+std::string Hydra::Config::get(std::string section, std::string label){
+	return m_data[section][label];
+}
+
 bool Hydra::Config::parse(){
 
 	string line;
