@@ -2,7 +2,7 @@
 #include <fstream>
 #include <string>
 
-#include "hydra.hpp"
+#include "server.hpp"
 
 using namespace std;
 
@@ -18,11 +18,9 @@ int main(int argc, char** argv){
 		return 1;
 	}
 
-	Hydra::Hydra hydra(config);
-
-	hydra.run();
-
-	return 0;
+	Hydra::Server hydra(config);
+	
+	return hydra.go();
 
 }
 

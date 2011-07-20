@@ -9,6 +9,10 @@ set (HYDRA_VERSION_MINOR 9)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -Wall -Werror")
 
+set (HYDRA_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY})
+
+find_package(Boost COMPONENTS thread system REQUIRED)
+
 configure_file (
   "${PROJECT_SOURCE_DIR}/include/version.hpp.in"
   "${PROJECT_BINARY_DIR}/include/version.hpp"
@@ -18,16 +22,30 @@ include_directories("include" "${PROJECT_BINARY_DIR}/include")
 
 set(HEADER_FILES
 	include/config.hpp
-	include/hydra.hpp
+	include/connection.hpp
+	include/header.hpp
+	include/io_service_pool.hpp
+	include/reply.hpp
+	include/request.hpp
+	include/request_handler.hpp
+	include/request_parser.hpp
+	include/server.hpp
 	include/version.hpp
 )
 
 set(SOURCE_FILES
 	src/config.cpp
-	src/hydra.cpp
+	src/connection.cpp
+	src/io_service_pool.cpp
 	src/main.cpp
+	src/request_handler.cpp
+	src/request_parser.cpp
+	src/reply.cpp
+	src/server.cpp
 )
 
 add_executable(hydra ${HEADER_FILES} ${SOURCE_FILES} ${CGI_HEADER_FILES} ${CGI_SOURCE_FILES})
+
+target_link_libraries(hydra ${HYDRA_LIBS})
 
 INSTALL(TARGETS hydra DESTINATION ${PROJECT_SOURCE_DIR}/bin)
