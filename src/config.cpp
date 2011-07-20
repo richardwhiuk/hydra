@@ -129,9 +129,11 @@ bool Hydra::Config::parse(){
 		} else if (lineMode == ERROR){
 			// Error in line.
 			std:cerr << "Config File Error: Line: " << line_no << " Error: " << error << '.'  << endl;
+			return false;
 		} else if (lineMode == LABEL || lineMode == LABEL_WS || lineMode == SEPARATOR || lineMode == SECTION_FIRST || lineMode == SECTION){
 			// Invalid syntax
 			cerr << "Config File Error: Line: " << line_no << " Invalid Syntax." << endl;
+			return false;
 		} else if (lineMode == VALUE_WS || lineMode == VALUE || lineMode == END){
 			// Valid line
 			m_data[section][label] = value;
@@ -139,6 +141,8 @@ bool Hydra::Config::parse(){
 
 		getline(in, line);
 	}		
+
+	return true;
 
 }
 
