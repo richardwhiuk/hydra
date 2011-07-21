@@ -16,8 +16,51 @@
 
 using namespace std;
 
+Hydra::Config::Section::Section(std::string name) : m_name(name){
+
+}
+
+Hydra::Config::Section::~Section(){
+
+}
+
+std::string Hydra::Config::Section::name(){
+	return m_name;
+}
+
+
+Hydra::Config::Config(std::string& file){
+	m_file = file;
+}
+
+Hydra::Config::~Config(){
+
+}
+
+const std::string& Hydra::Config::file(){
+	return m_file;
+}
+
+Hydra::Config::Iterator Hydra::Config::get(std::string section){
+	for(Hydra::Config::Iterator it = m_data.begin(); it != m_data.end(); ++it){
+		if(it->name() == section){
+			return it;
+		}
+	}
+	return m_data.end();
+}
+
 std::string Hydra::Config::get(std::string section, std::string label){
-	return m_data[section][label];
+	Hydra::Config::Iterator it = get(section);
+	return (*it)[label];
+}
+
+Hydra::Config::Iterator Hydra::Config::begin(){
+	return m_data.begin();
+}
+
+Hydra::Config::Iterator Hydra::Config::end(){
+	return m_data.end();
 }
 
 bool Hydra::Config::parse(){
@@ -33,7 +76,7 @@ bool Hydra::Config::parse(){
 
 	getline(in, line);
 
-	string section = "global";
+	Section section("");
 	string label = "";
 	string ws;
 	string value;
@@ -73,13 +116,14 @@ bool Hydra::Config::parse(){
 				}
 			} else if(lineMode == SECTION) {
 				if(line[i] == ']'){
-					section = label;
+					m_data.push_back(section);
+					section = Section(label);
 					lineMode = START;
 				} else if(line[i] == '#'){
 					lineMode = ERROR;
 					error = "Comment in section name";
 				} else {
-					label += line[i];
+					label.push_back(line[i]);
 				}
 			} else if(lineMode == LABEL) {
 				if(line[i] == '\t' || line[i] == ' ' || line[i] == '\r' || line[i] == '\n') {
@@ -91,19 +135,19 @@ bool Hydra::Config::parse(){
 				} else if(line[i] == ':') {
 					lineMode = SEPARATOR;
 				} else {
-					label += line[i];
+					label.push_back(line[i]);
 				}
 			} else if(lineMode == LABEL_WS) {
 				if(line[i] == '\t' || line[i] == ' ' || line[i] == '\r' || line[i] == '\n') {
-					ws += line[i];
+					ws.push_back(line[i]);
 				} else if(line[i] == '#'){
 					lineMode = ERROR;
 					error = "Comment in label";
 				} else if(line[i] == ':') {
 					lineMode = SEPARATOR;
 				} else {
-					label += ws;
-					label += line[i];
+					label.append(ws);
+					label.push_back(line[i]);
 					lineMode = LABEL;
 				}
 			} else if(lineMode == SEPARATOR) {
@@ -150,11 +194,12 @@ bool Hydra::Config::parse(){
 			return false;
 		} else if (lineMode == VALUE_WS || lineMode == VALUE || lineMode == END){
 			// Valid line
-			m_data[section][label] = value;
+			section[label] = value;
 		}
 
 		getline(in, line);
-	}		
+	}
+	m_data.push_back(section);
 
 	return true;
 

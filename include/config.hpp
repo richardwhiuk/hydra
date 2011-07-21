@@ -13,12 +13,29 @@
 
 #include <string>
 #include <map>
+#include <vector>
 
 namespace Hydra {
 
 class Config {
 
 public:
+
+	class Section : public std::map<std::string, std::string> {
+
+	public:
+		Section(std::string);
+		~Section();
+		std::string name();
+
+	private:
+
+		std::string m_name;
+
+	};
+
+	typedef std::vector<Section>  Data;
+	typedef Data::iterator Iterator;
 
 	enum ParseMode {
 		START,
@@ -34,27 +51,26 @@ public:
 		ERROR,
 	};
 
-	Config(std::string& file){
-		m_file = file;
-	}
+	Config(std::string& file);
 
-	const std::string& file(){
-		return m_file;
-	}
+	virtual ~Config();
+
+	const std::string& file();
 
 	bool parse();
 
+	Config::Iterator begin();
+
+	Config::Iterator end();
+
 	std::string get(std::string section, std::string label);
 
-	~Config(){
-
-	}
+	Config::Iterator get(std::string section);
 
 private:
 
 	std::string m_file;
-	
-	std::map<std::string, std::map<std::string, std::string> > m_data;
+	Config::Data m_data;
 
 };
 
