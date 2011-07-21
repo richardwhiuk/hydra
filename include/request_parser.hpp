@@ -63,8 +63,7 @@ private:
 	static bool is_digit(int c);
 
 	/// The current state of the parser.
-	enum state
-	{
+	enum state {
 		method_start,
 		method,
 		uri_start,
@@ -86,7 +85,9 @@ private:
 		header_value,
 		expecting_newline_2,
 		expecting_newline_3
-	} state_;
+	};
+	
+	state m_state;
 };
 
 }
