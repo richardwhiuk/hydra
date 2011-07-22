@@ -36,7 +36,12 @@ bool Hydra::Server::setup(){
 	// Configuration
 
 	if(!m_config.parse()){
-		cerr << "Failed to parse configuration file." << std::endl;
+		cerr << "Hydra: Failed to parse configuration file." << std::endl;
+		return false;
+	}
+
+	if(!setup_hosts()){
+		cerr << "Hydra: Failed to setup hosts." << std::endl;
 		return false;
 	}
 
@@ -100,6 +105,31 @@ bool Hydra::Server::setup(){
 void Hydra::Server::run(){
 	
 	m_io_service_pool->run();
+
+}
+
+bool Hydra::Server::setup_hosts(){
+
+	for(Hydra::Config::Iterator it = m_config.begin(); it != m_config.end(); ++it){
+		Hydra::Host host(*it);
+		if(host.valid()){
+			m_configs.insert(std::pair<std::string, Host>(it->name(),host));
+		}
+	}
+
+	for(std::map<std::string, Host>::iterator it = m_configs.begin(); it != m_configs.end(); ++it){
+	
+		Hydra::Host::Aliases aliases = it->second.alias();
+
+		for(Hydra::Host::Aliases::iterator ait = aliases.begin(); ait != aliases.end(); ++ait){
+
+			m_hosts.insert(std::pair<std::string, Host*>(*ait,&(it->second)));
+
+		}
+
+	}
+
+	return true;
 
 }
 

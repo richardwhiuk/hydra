@@ -31,9 +31,12 @@ configure_file (
 include_directories("include" "${PROJECT_BINARY_DIR}/include")
 
 set(HEADER_FILES
+	include/apache2.hpp
 	include/config.hpp
 	include/connection.hpp
+	include/engine.hpp
 	include/header.hpp
+	include/host.hpp
 	include/io_service_pool.hpp
 	include/reply.hpp
 	include/request.hpp
@@ -44,8 +47,11 @@ set(HEADER_FILES
 )
 
 set(SOURCE_FILES
+	src/apache2.cpp
 	src/config.cpp
 	src/connection.cpp
+	src/engine.cpp
+	src/host.cpp
 	src/io_service_pool.cpp
 	src/main.cpp
 	src/request_handler.cpp

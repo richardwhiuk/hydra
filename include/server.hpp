@@ -21,6 +21,7 @@
 #include "request_handler.hpp"
 #include "config.hpp"
 #include "version.hpp"
+#include "host.hpp"
 
 namespace Hydra {
 
@@ -33,6 +34,8 @@ public:
 	}
 
 	bool setup();
+
+	bool setup_hosts();
 
 	void run();
 
@@ -50,6 +53,12 @@ private:
 	void handle_accept(const boost::system::error_code& e);
 
 	bool m_setup;
+
+	/// Configuration Hosts
+	std::map<std::string, Host> m_configs;
+
+	/// Hosts
+	std::map<std::string, Host*> m_hosts;
 
 	/// Hydra Configuration
 	Hydra::Config m_config;
