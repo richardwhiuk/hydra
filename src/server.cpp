@@ -184,6 +184,22 @@ unsigned int Hydra::Server::go(){
 
 }
 
+Hydra::Host* Hydra::Server::host(std::string host){
+
+	std::cout << host << std::endl;
+
+	std::map<std::string, Hydra::Host*>::iterator hit = m_hosts.find(host);
+
+	if(hit == m_hosts.end()){
+
+		std::cerr << "Hydra: Failed to find host - " << host << std::endl;	
+
+		return NULL;
+	} else {
+		return hit->second;
+	}
+}
+
 void Hydra::Server::handle_accept(const boost::system::error_code& e)
 {
 	if (!e){
