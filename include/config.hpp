@@ -21,7 +21,7 @@ class Config {
 
 public:
 
-	class Section : public std::map<std::string, std::string> {
+	class Section : public std::map<std::string, std::vector<std::string> > {
 
 	public:
 		Section(std::string);
@@ -34,7 +34,7 @@ public:
 
 	};
 
-	typedef std::vector<Section>  Data;
+	typedef std::vector<Section> Data;
 	typedef Data::iterator Iterator;
 
 	enum ParseMode {

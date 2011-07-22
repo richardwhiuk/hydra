@@ -52,7 +52,7 @@ Hydra::Config::Iterator Hydra::Config::get(std::string section){
 
 std::string Hydra::Config::get(std::string section, std::string label){
 	Hydra::Config::Iterator it = get(section);
-	return (*it)[label];
+	return (*it)[label].front();
 }
 
 Hydra::Config::Iterator Hydra::Config::begin(){
@@ -194,7 +194,7 @@ bool Hydra::Config::parse(){
 			return false;
 		} else if (lineMode == VALUE_WS || lineMode == VALUE || lineMode == END){
 			// Valid line
-			section[label] = value;
+			section[label].push_back(value);
 		}
 
 		getline(in, line);
