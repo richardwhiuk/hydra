@@ -8,10 +8,12 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
+#include "server.hpp"
 #include "apache2.hpp"
 
+#include "errno.h"
 #include <iostream>
-
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <pwd.h>
 #include <grp.h>
@@ -81,11 +83,65 @@ Hydra::Apache2::Apache2(Config::Section& config) : Hydra::Engine::Engine(config)
 
 	if(pid == 0){
 		
+		if(mkdir("/var/run/hydra", 00775) && errno != EEXIST)
+			_exit(1);
+
+		if(mkdir("/var/run/hydra/apache2", 00775) && errno != EEXIST)
+			_exit(1);
+
+		{
+			std::string rds = ("/var/run/hydra/apache2/" + config.name());
+			const char* rdc = rds.c_str();
+
+			if(mkdir(rdc, 00775) && errno != EEXIST)
+				_exit(1);
+
+			if(chown(rdc, uid, gid))
+				_exit(1);
+
+		}
+
+		if(mkdir("/var/log/hydra", 00775) && errno != EEXIST)
+			_exit(1);
+
+		if(mkdir("/var/log/hydra/apache2", 00775) && errno != EEXIST)
+			_exit(1);
+
+		{
+
+			std::string lds = ("/var/log/hydra/apache2/" + config.name());
+			const char* ldc = lds.c_str();
+
+			if(mkdir(ldc, 00775) && errno != EEXIST)
+				_exit(1);
+
+			if(chown(ldc, uid, gid))
+				_exit(1);
+		
+		}
+		
+		if(mkdir("/var/lock/hydra", 00775) && errno != EEXIST)
+			_exit(1);
+
+		if(mkdir("/var/lock/hydra/apache2", 00775) && errno != EEXIST)
+			_exit(1);
+
+		{
+
+			std::string lds = ("/var/lock/hydra/apache2/" + config.name());
+			const char* ldc = lds.c_str();
+
+			if(mkdir(ldc, 00775) && errno != EEXIST)
+				_exit(1);
+
+			if(chown(ldc, uid, gid))
+				_exit(1);
+
+		}
+
+
 		setgid(gid);
 		setuid(uid);
-
-		// TODO: We should make sure that the folders exist as apache2ctl does this.
-		// Each folder should be owned by the webserver user/group
 
 		std::string apconfig("/etc/apache2/apache2.conf");
 
