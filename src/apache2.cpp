@@ -45,28 +45,50 @@ bool Hydra::Apache2::start(){
 		gstr = m_details["group"].front().c_str();
 	}
 
-	// TODO:
-	// We should put a mutex around this to prevent overwriting the data structure.
+	{
+		size_t buf = sysconf(_SC_GETPW_R_SIZE_MAX);
+		struct passwd ustruct;
+		char* buffer = new char[buf];
+		struct passwd* udata;
+		int result = getpwnam_r(ustr, &ustruct, buffer, buf, &udata);
 
-	struct passwd * udata = getpwnam(ustr);
-	
-	if(udata == 0){
-		std::cerr << "Hydra: Apache2: [" << m_details.name() << "] User Data Not Found." << std::endl;
-		return false;
-	}		
+		if(result != 0){
+			std::cerr << "Hydra: Apache2: [" << m_details.name() << "] User Data Lookup Failed." << std::endl;
+		} 
 
-	m_uid = udata->pw_uid;
-	m_user = udata->pw_name;
+		if(udata == 0){
+			std::cerr << "Hydra: Apache2: [" << m_details.name() << "] User Data Not Found." << std::endl;
+			return false;
+		}
 
-	struct group * gdata = getgrnam(gstr);
+		m_uid = udata->pw_uid;
+		m_user = udata->pw_name;
 
-	if(gdata == 0){
-		std::cerr << "Hydra: Apache2: [" << m_details.name() << "] Group Data Not Found." << std::endl;
-		return false;
+		delete[] buffer;
 	}
 
-	m_gid = gdata->gr_gid;
-	m_group = gdata->gr_name;
+	{
+		size_t buf = sysconf(_SC_GETGR_R_SIZE_MAX);
+		struct group gstruct;
+		char* buffer = new char[buf];
+		struct group* gdata;
+		int result = getgrnam_r(gstr, &gstruct, buffer, buf, &gdata);
+
+		if(result != 0){
+			std::cerr << "Hydra: Apache2: [" << m_details.name() << "] Group Data Lookup Failed." << std::endl;
+		} 
+
+		if(gdata == 0){
+			std::cerr << "Hydra: Apache2: [" << m_details.name() << "] Group Data Not Found." << std::endl;
+			return false;
+		}
+
+		m_gid = gdata->gr_gid;
+		m_group = gdata->gr_name;
+
+		delete[] buffer;
+
+	}
 
 	return signal("start");
 
