@@ -27,6 +27,14 @@ Hydra::Server::Server(std::string& config) : m_setup(false), m_config(config), m
 	
 }
 
+Hydra::Server::~Server(){
+
+	for(std::map<std::string, Host*>::iterator it = m_configs.begin(); it != m_configs.end(); ++it){
+		delete it->second;
+	}
+
+}
+
 bool Hydra::Server::setup(){
 
 	if(m_setup){
@@ -115,19 +123,19 @@ void Hydra::Server::run(){
 bool Hydra::Server::setup_hosts(){
 
 	for(Hydra::Config::Iterator it = m_config.begin(); it != m_config.end(); ++it){
-		Hydra::Host host(*it, this);
-		if(host.valid()){
-			m_configs.insert(std::pair<std::string, Host>(it->name(),host));
+		Hydra::Host* host = new Hydra::Host(*it, this);
+		if(host->valid()){
+			m_configs.insert(std::pair<std::string, Host*>(it->name(),host));
 		}
 	}
 
-	for(std::map<std::string, Host>::iterator it = m_configs.begin(); it != m_configs.end(); ++it){
+	for(std::map<std::string, Host*>::iterator it = m_configs.begin(); it != m_configs.end(); ++it){
 	
-		Hydra::Host::Aliases aliases = it->second.alias();
+		Hydra::Host::Aliases aliases = it->second->alias();
 
 		for(Hydra::Host::Aliases::iterator ait = aliases.begin(); ait != aliases.end(); ++ait){
 
-			m_hosts.insert(std::pair<std::string, Host*>(*ait,&(it->second)));
+			m_hosts.insert(std::pair<std::string, Host*>(*ait,it->second));
 
 		}
 

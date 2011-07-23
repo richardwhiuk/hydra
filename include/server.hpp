@@ -43,9 +43,7 @@ public:
 
 	void stop();
 
-	~Server(){
-
-	}
+	~Server();
 
 	// Forked procs need to call this.
 
@@ -61,7 +59,7 @@ private:
 	sigset_t m_old_mask;
 
 	/// Configuration Hosts
-	std::map<std::string, Host> m_configs;
+	std::map<std::string, Host*> m_configs;
 
 	/// Hosts
 	std::map<std::string, Host*> m_hosts;
