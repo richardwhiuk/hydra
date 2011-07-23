@@ -59,9 +59,6 @@ void Hydra::Host::request(const Hydra::request& req, Hydra::reply& rep){
 
 	m_engine->request(req, rep);
 
-	std::cout << "Request recieved for host: " << m_details.name() << std::endl;
-	rep = reply::stock_reply(reply::not_found);
-
 /*	// Decode url to path.
 	std::string request_path;
 

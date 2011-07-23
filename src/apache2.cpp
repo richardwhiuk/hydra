@@ -14,7 +14,7 @@
 #include "errno.h"
 #include <iostream>
 #include <sys/stat.h>
-#include <sys/types.h>
+#include <sys/wait.h>
 #include <pwd.h>
 #include <grp.h>
 #include <unistd.h>
@@ -32,19 +32,20 @@ void strmasscpy(char** dst, size_t place, const std::string src){
 // We should have a mutex in host protecting engine creation...
 
 Hydra::Apache2::Apache2(Config::Section& config, Server* server) : Hydra::Engine::Engine(config, server){
+	m_started = start();
+}
 
-	uid_t uid; 				// User of apache (assume nobody)
+bool Hydra::Apache2::start(){
+
 	const char* ustr = "nobody";
-
-	gid_t gid;
 	const char* gstr = "nogroup";
 
-	if(config["user"].size() > 0){
-		ustr = config["user"].front().c_str();
+	if(m_details["user"].size() > 0){
+		ustr = m_details["user"].front().c_str();
 	}
 
-	if(config["group"].size() > 0){
-		gstr = config["group"].front().c_str();
+	if(m_details["group"].size() > 0){
+		gstr = m_details["group"].front().c_str();
 	}
 
 	// TODO:
@@ -53,109 +54,137 @@ Hydra::Apache2::Apache2(Config::Section& config, Server* server) : Hydra::Engine
 	struct passwd * udata = getpwnam(ustr);
 	
 	if(udata == 0){
-		// Server Error
-		return;
+		std::cerr << "Hydra: Apache2: [" << m_details.name() << "] User Data Not Found." << std::endl;
+		return false;
 	}		
 
-	uid = udata->pw_uid;
-	std::string user = udata->pw_name;
+	m_uid = udata->pw_uid;
+	m_user = udata->pw_name;
 
 	struct group * gdata = getgrnam(gstr);
 
 	if(gdata == 0){
-		// Server Error
-		return;
+		std::cerr << "Hydra: Apache2: [" << m_details.name() << "] Group Data Not Found." << std::endl;
+		return false;
 	}
 
-	gid = gdata->gr_gid;
-	std::string group = gdata->gr_name;
+	m_gid = gdata->gr_gid;
+	m_group = gdata->gr_name;
 
-	std::cout << "Starting Apache Server: (" << user << "," << group << ")" << std::endl;
+	return signal("start");
+
+}
+
+Hydra::Apache2::~Apache2(){
+
+	if(m_started){
+		signal("stop");
+	}
+
+}
+
+void Hydra::Apache2::request(const Hydra::request& req, Hydra::reply& rep){
+
+	if(m_started){
+		rep = reply::stock_reply(reply::not_found);
+	} else {
+		rep = reply::stock_reply(reply::service_unavailable);
+	}
+
+}
+
+void Hydra::Apache2::mkdirs(){
+	if(mkdir("/var/run/hydra", 00775) && errno != EEXIST)
+		_exit(-2);
+
+	if(mkdir("/var/run/hydra/apache2", 00775) && errno != EEXIST)
+		_exit(-2);
+
+	{
+		std::string rds = ("/var/run/hydra/apache2/" + m_details.name());
+		const char* rdc = rds.c_str();
+
+		if(mkdir(rdc, 00775) && errno != EEXIST)
+			_exit(-2);
+
+		if(chown(rdc, m_uid, m_gid))
+			_exit(-2);
+
+	}
+
+	if(mkdir("/var/log/hydra", 00775) && errno != EEXIST)
+		_exit(-2);
+
+	if(mkdir("/var/log/hydra/apache2", 00775) && errno != EEXIST)
+		_exit(-3);
+
+	{
 	
-	pid_t pid;				// Process of apache start daemon
+		std::string lds = ("/var/log/hydra/apache2/" + m_details.name());
+		const char* ldc = lds.c_str();
+	
+		if(mkdir(ldc, 00775) && errno != EEXIST)
+			_exit(-2);
+	
+		if(chown(ldc, m_uid, m_gid))
+			_exit(-2);
+		
+	}
+		
+	if(mkdir("/var/lock/hydra", 00775) && errno != EEXIST)
+		_exit(-2);
+	
+	if(mkdir("/var/lock/hydra/apache2", 00775) && errno != EEXIST)
+		_exit(-2);
+	
+	{
+	
+		std::string lds = ("/var/lock/hydra/apache2/" + m_details.name());
+		const char* ldc = lds.c_str();
+	
+		if(mkdir(ldc, 00775) && errno != EEXIST)
+			_exit(-2);
+	
+		if(chown(ldc, m_uid, m_gid))
+			_exit(-2);
 
-	pid = fork();
-
-	if(pid == -1){
-		// Server error
-		return;
 	}
 
-	if(pid == 0){
+}
+
+bool Hydra::Apache2::signal(std::string signal){
+	pid_t pid = fork();
+
+	switch(pid){
+
+	case -1:
+		return false;
 		
-		if(mkdir("/var/run/hydra", 00775) && errno != EEXIST)
-			_exit(1);
+	case 0: {
 
-		if(mkdir("/var/run/hydra/apache2", 00775) && errno != EEXIST)
-			_exit(1);
+		m_server->restore_signals();
 
-		{
-			std::string rds = ("/var/run/hydra/apache2/" + config.name());
-			const char* rdc = rds.c_str();
-
-			if(mkdir(rdc, 00775) && errno != EEXIST)
-				_exit(1);
-
-			if(chown(rdc, uid, gid))
-				_exit(1);
-
+		if(signal == "start"){
+			mkdirs();
+			setgid(m_gid);
+			setuid(m_uid);
 		}
-
-		if(mkdir("/var/log/hydra", 00775) && errno != EEXIST)
-			_exit(1);
-
-		if(mkdir("/var/log/hydra/apache2", 00775) && errno != EEXIST)
-			_exit(1);
-
-		{
-
-			std::string lds = ("/var/log/hydra/apache2/" + config.name());
-			const char* ldc = lds.c_str();
-
-			if(mkdir(ldc, 00775) && errno != EEXIST)
-				_exit(1);
-
-			if(chown(ldc, uid, gid))
-				_exit(1);
-		
-		}
-		
-		if(mkdir("/var/lock/hydra", 00775) && errno != EEXIST)
-			_exit(1);
-
-		if(mkdir("/var/lock/hydra/apache2", 00775) && errno != EEXIST)
-			_exit(1);
-
-		{
-
-			std::string lds = ("/var/lock/hydra/apache2/" + config.name());
-			const char* ldc = lds.c_str();
-
-			if(mkdir(ldc, 00775) && errno != EEXIST)
-				_exit(1);
-
-			if(chown(ldc, uid, gid))
-				_exit(1);
-
-		}
-
-
-		setgid(gid);
-		setuid(uid);
 
 		std::string apconfig("/etc/apache2/apache2.conf");
 
-		if(config["config"].size() > 0){
-			apconfig = config["config"].front();
+		if(m_details["config"].size() > 0){
+			apconfig = m_details["config"].front();
 		}
 
 		char* newargv[10];
 
+		const std::string name = m_details.name();
+
 		strmasscpy(newargv, 0, "/usr/sbin/apache2");
-		strmasscpy(newargv, 1, "-d");
-		strmasscpy(newargv, 2, "/etc/apache2");
-		strmasscpy(newargv, 3, "-k");
-		strmasscpy(newargv, 4, "start");
+		strmasscpy(newargv, 1, "-k");
+		strmasscpy(newargv, 2, signal);
+		strmasscpy(newargv, 3, "-d");
+		strmasscpy(newargv, 4, "/etc/apache2");
 		strmasscpy(newargv, 5, "-f");
 		strmasscpy(newargv, 6, apconfig);
 		strmasscpy(newargv, 7, "-D");
@@ -165,35 +194,23 @@ Hydra::Apache2::Apache2(Config::Section& config, Server* server) : Hydra::Engine
 		char* newenviron[8];
 		
 		strmasscpy(newenviron, 0, "APACHE_CONFDIR=/etc/apache2");
-		strmasscpy(newenviron, 1, "APACHE_RUN_USER=" + user);
-		strmasscpy(newenviron, 2, "APACHE_RUN_GROUP=" + group);
-		strmasscpy(newenviron, 3, "APACHE_PID_FILE=/var/run/hydra/apache2/" + config.name() + "/pid");
-		strmasscpy(newenviron, 4, "APACHE_RUN_DIR=/var/run/hydra/apache2/" + config.name());
-		strmasscpy(newenviron, 5, "APACHE_LOCK_DIR=/var/lock/hydra/apache2/" + config.name());
-		strmasscpy(newenviron, 6, "APACHE_LOG_DIR=/var/log/hydra/apache2/" + config.name());
+		strmasscpy(newenviron, 1, "APACHE_RUN_USER=" + m_user);
+		strmasscpy(newenviron, 2, "APACHE_RUN_GROUP=" + m_group);
+		strmasscpy(newenviron, 3, "APACHE_PID_FILE=/var/run/hydra/apache2/" + name + "/pid");
+		strmasscpy(newenviron, 4, "APACHE_RUN_DIR=/var/run/hydra/apache2/" + name);
+		strmasscpy(newenviron, 5, "APACHE_LOCK_DIR=/var/lock/hydra/apache2/" + name);
+		strmasscpy(newenviron, 6, "APACHE_LOG_DIR=/var/log/hydra/apache2/" + name);
 		newenviron[7] = NULL;
 
 		execve("/usr/sbin/apache2", newargv, newenviron);
 
 		_exit(0);
 
-	} else {
-
-		std::cout << "PID: " << pid << std::endl;
-
-		// pid == Apache daemon proc.
-
 	}
-
-}
-
-Hydra::Apache2::~Apache2(){
-
-	// TODO: Stop apache.
-
-}
-
-void Hydra::Apache2::request(const Hydra::request&, Hydra::reply&){
-
+	default:
+		int status;
+		waitpid(pid, &status, 0);
+		return (status == 0);
+	}
 }
 

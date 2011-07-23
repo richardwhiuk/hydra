@@ -9,6 +9,7 @@
 //
 
 #include "engine.hpp"
+#include <sys/types.h>
 
 #ifndef HYDRA_FILE_APACHE2_HPP
 #define HYDRA_FILE_APACHE2_HPP
@@ -26,6 +27,20 @@ public:
 	virtual ~Apache2();
 
 	virtual void request(const Hydra::request&, Hydra::reply&);
+
+private:
+
+	bool start();
+	void mkdirs();
+	bool signal(std::string signal);
+
+	bool m_started;
+	
+	std::string m_user;
+	std::string m_group;
+
+	uid_t m_uid;
+	gid_t m_gid;
 
 };
 
