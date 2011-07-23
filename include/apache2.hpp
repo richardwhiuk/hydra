@@ -10,6 +10,7 @@
 
 #include "engine.hpp"
 #include <sys/types.h>
+#include <boost/asio.hpp>
 
 #ifndef HYDRA_FILE_APACHE2_HPP
 #define HYDRA_FILE_APACHE2_HPP
@@ -29,6 +30,31 @@ public:
 	virtual void request(const Hydra::request&, Hydra::reply&);
 
 private:
+	
+	class Client {
+		
+	public:
+		Client(boost::asio::io_service&, const Hydra::request&, Hydra::reply&, const std::string&, const std::string&);
+
+		~Client();
+
+	private:
+
+		void handle_read_content(const boost::system::error_code& err);
+		void handle_read_headers(const boost::system::error_code& err);
+		void handle_read_status_line(const boost::system::error_code& err);
+		void handle_write_request(const boost::system::error_code& err);
+		void handle_connect(const boost::system::error_code& err, boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
+		void handle_resolve(const boost::system::error_code& err, boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
+
+		Hydra::reply& m_reply;
+
+		boost::asio::ip::tcp::resolver m_resolver;
+		boost::asio::ip::tcp::socket m_socket;
+		boost::asio::streambuf m_request;
+		boost::asio::streambuf m_response;
+
+	};
 
 	bool start();
 	void mkdirs();

@@ -85,11 +85,32 @@ Hydra::Apache2::~Apache2(){
 
 void Hydra::Apache2::request(const Hydra::request& req, Hydra::reply& rep){
 
-	if(m_started){
-		rep = reply::stock_reply(reply::not_found);
-	} else {
+	if(!m_started){
 		rep = reply::stock_reply(reply::service_unavailable);
+		return;
+	} 
+
+	if(m_details["address"].size() == 0){
+		rep = reply::stock_reply(reply::service_unavailable);
+		return;
 	}
+
+	if(m_details["port"].size() == 0){
+		rep = reply::stock_reply(reply::service_unavailable);
+		return;
+	}
+
+	boost::asio::io_service io_service;
+
+	Hydra::Apache2::Client client(
+		io_service, 
+		req,
+		rep,
+		m_details["address"].front(),
+		m_details["port"].front()
+	);
+
+	io_service.run();
 
 }
 
