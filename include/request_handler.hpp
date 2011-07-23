@@ -34,10 +34,6 @@ public:
 
 private:
 
-	/// Perform URL-decoding on a string. Returns false if the encoding was
-	/// invalid.
-	static bool url_decode(const std::string& in, std::string& out);
-
 	Server* m_server;
 
 };
