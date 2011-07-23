@@ -11,7 +11,7 @@
 
 #include "host.hpp"
 
-Hydra::Host::Host(Config::Section details) : m_details(details), m_engine(NULL) {
+Hydra::Host::Host(Config::Section details, Server* server) : m_details(details), m_engine(NULL), m_server(server) {
 
 }
 
@@ -50,7 +50,7 @@ void Hydra::Host::request(const Hydra::request& req, Hydra::reply& rep){
 
 	if(m_engine == NULL){
 		Engine* engine;
-		engine = Engine::Create(m_details["engine"].front(), m_details);
+		engine = Engine::Create(m_details["engine"].front(), m_details, m_server);
 		m_engine = engine;
 	}
 

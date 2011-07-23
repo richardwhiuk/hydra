@@ -15,11 +15,13 @@
 
 namespace Hydra {
 
+class Server;
+
 class Apache2 : public Engine { 
 
 public:
 
-	Apache2(Config::Section& config);
+	Apache2(Config::Section& config, Server* server);
 
 	virtual ~Apache2();
 

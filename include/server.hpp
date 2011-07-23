@@ -49,12 +49,18 @@ public:
 
 	}
 
+	// Forked procs need to call this.
+
+	void restore_signals();
+
 private:
 
 	/// Handle completion of an asynchronous accept operation.
 	void handle_accept(const boost::system::error_code& e);
 
 	bool m_setup;
+
+	sigset_t m_old_mask;
 
 	/// Configuration Hosts
 	std::map<std::string, Host> m_configs;

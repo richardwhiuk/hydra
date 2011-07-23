@@ -17,15 +17,17 @@
 
 namespace Hydra {
 
+class Server;
+
 class Engine { 
 
 public:
 
-	Engine(Config::Section& config) : m_details(config){
+	Engine(Config::Section& config, Server* server) : m_details(config), m_server(server){
 
 	}
 
-	static Engine* Create(std::string engine, Config::Section& details);
+	static Engine* Create(std::string engine, Config::Section& details, Server* server);
 
 	static bool Valid(std::string engine);
 
@@ -38,6 +40,7 @@ public:
 protected:
 
 	Config::Section& m_details;
+	Server* m_server;
 
 };
 

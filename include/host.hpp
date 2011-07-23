@@ -18,11 +18,13 @@
 
 namespace Hydra {
 
+class Server;
+
 class Host { 
 
 public:
 
-	explicit Host(Config::Section details);
+	explicit Host(Config::Section details, Server* server);
 
 	typedef std::vector<std::string> Aliases;
 
@@ -38,6 +40,7 @@ private:
 
 	Config::Section m_details;
 	Engine* m_engine;
+	Server* m_server;
 
 };
 

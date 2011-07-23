@@ -111,7 +111,7 @@ void Hydra::Server::run(){
 bool Hydra::Server::setup_hosts(){
 
 	for(Hydra::Config::Iterator it = m_config.begin(); it != m_config.end(); ++it){
-		Hydra::Host host(*it);
+		Hydra::Host host(*it, this);
 		if(host.valid()){
 			m_configs.insert(std::pair<std::string, Host>(it->name(),host));
 		}
@@ -139,6 +139,10 @@ void Hydra::Server::stop(){
 
 }
 
+void Hydra::Server::restore_signals(){
+	pthread_sigmask(SIG_SETMASK, &m_old_mask, 0);
+}
+
 unsigned int Hydra::Server::go(){
 
 	if(!setup()){
@@ -153,14 +157,13 @@ unsigned int Hydra::Server::go(){
 		// Block all signals for background thread.
 		sigset_t new_mask;
 		sigfillset(&new_mask);
-		sigset_t old_mask;
-		pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
+		pthread_sigmask(SIG_BLOCK, &new_mask, &m_old_mask);
 
 		// Run server in background thread.
 		boost::thread t(boost::bind(&Hydra::Server::run, this));
 
 		// Restore previous signals.
-		pthread_sigmask(SIG_SETMASK, &old_mask, 0);
+		pthread_sigmask(SIG_SETMASK, &m_old_mask, 0);
 
 		// Wait for signal indicating time to shut down.
 		sigset_t wait_mask;

@@ -31,7 +31,7 @@ void strmasscpy(char** dst, size_t place, const std::string src){
 // TODO:
 // We should have a mutex in host protecting engine creation...
 
-Hydra::Apache2::Apache2(Config::Section& config) : Hydra::Engine::Engine(config){
+Hydra::Apache2::Apache2(Config::Section& config, Server* server) : Hydra::Engine::Engine(config, server){
 
 	uid_t uid; 				// User of apache (assume nobody)
 	const char* ustr = "nobody";
