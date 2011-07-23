@@ -29,9 +29,7 @@ class Server : private boost::noncopyable {
 
 public:
 
-	Server(std::string& config) : m_setup(false), m_config(config), m_request_handler(this){
-	
-	}
+	Server(std::string& config);
 
 	bool setup();
 

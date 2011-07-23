@@ -23,6 +23,10 @@
 
 using namespace std;
 
+Hydra::Server::Server(std::string& config) : m_setup(false), m_config(config), m_request_handler(this){
+	
+}
+
 bool Hydra::Server::setup(){
 
 	if(m_setup){
