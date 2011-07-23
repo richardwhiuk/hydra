@@ -118,15 +118,15 @@ void Hydra::Apache2::Client::handle_read_headers(const boost::system::error_code
 	if (!err){
 		// Process the response headers.
 		std::istream response_stream(&m_response);
-		std::string header;
+		std::string hstr;
 
-		while (std::getline(response_stream, header) && header != "\r"){
+		while (std::getline(response_stream, hstr, '\n') && hstr != "\r"){
 			size_t a;
-			a = header.find(':');		
+			a = hstr.find(':');		
 			Hydra::header nh;
-			nh.name = header.substr(0, a);
+			nh.name = hstr.substr(0, a);
+			nh.value = hstr.substr(a+2,hstr.length() - a - 1); 
 			if(nh.name != "Connection" && nh.name != "Keep-Alive"){
-				nh.value = header.substr(a+2,header.length() - a); 
 				m_reply.headers.push_back(nh);
 			}
 		}
