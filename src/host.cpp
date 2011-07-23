@@ -52,9 +52,13 @@ std::vector<std::string> Hydra::Host::alias(){
 void Hydra::Host::request(const Hydra::request& req, Hydra::reply& rep){
 
 	if(m_engine == NULL){
-		Engine* engine;
-		engine = Engine::Create(m_details["engine"].front(), m_details, m_server);
-		m_engine = engine;
+		m_engine_mux.lock();
+		if(m_engine == NULL){
+			Engine* engine;
+			engine = Engine::Create(m_details["engine"].front(), m_details, m_server);
+			m_engine = engine;
+		}
+		m_engine_mux.unlock();
 	}
 
 	m_engine->request(req, rep);

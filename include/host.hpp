@@ -13,6 +13,8 @@
 #include "request.hpp"
 #include "reply.hpp"
 
+#include <boost/thread/mutex.hpp>
+
 #ifndef HYDRA_FILE_HOST_HPP
 #define HYDRA_FILE_HOST_HPP
 
@@ -39,8 +41,9 @@ public:
 private:
 
 	Config::Section m_details;
-	Engine* m_engine;
+	Engine* volatile m_engine;	// Can be modified by a different thread.
 	Server* m_server;
+	boost::mutex m_engine_mux;
 
 };
 

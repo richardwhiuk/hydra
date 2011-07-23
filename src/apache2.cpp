@@ -28,9 +28,6 @@ void strmasscpy(char** dst, size_t place, const std::string src){
 	std::strcpy(dst[place], src.c_str());
 }
 
-// TODO:
-// We should have a mutex in host protecting engine creation...
-
 Hydra::Apache2::Apache2(Config::Section& config, Server* server) : Hydra::Engine::Engine(config, server){
 	m_started = start();
 }
