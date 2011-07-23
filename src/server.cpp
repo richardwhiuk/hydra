@@ -41,7 +41,7 @@ bool Hydra::Server::setup(){
 		return true;
 	}
 
-	cout << "Hydra: HTTP/1.1 Daemon" << endl;
+	cout << "Hydra: HTTP/1.0 Daemon" << endl;
 	cout << "Hydra: Version " << HYDRA << "" << endl;
 	cout << "Hydra: Config File: " << m_config.file() << endl;
 
