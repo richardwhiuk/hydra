@@ -16,7 +16,10 @@ Hydra::Host::Host(Config::Section details, Server* server) : m_details(details),
 }
 
 Hydra::Host::~Host(){
-
+	if(m_engine != NULL){
+		delete m_engine;
+		m_engine = NULL;
+	}
 }
 
 bool Hydra::Host::valid(){
