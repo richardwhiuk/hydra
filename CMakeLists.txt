@@ -19,9 +19,9 @@ set (HYDRA_VERSION_MINOR 9)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -Wall -Werror")
 
-set (HYDRA_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY})
-
 find_package(Boost COMPONENTS thread system REQUIRED)
+
+set (HYDRA_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY})
 
 configure_file (
   "${PROJECT_SOURCE_DIR}/include/version.hpp.in"
