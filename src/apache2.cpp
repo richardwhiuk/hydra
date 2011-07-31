@@ -28,7 +28,7 @@ void strmasscpy(char** dst, size_t place, const std::string src){
 	std::strcpy(dst[place], src.c_str());
 }
 
-Hydra::Apache2::Apache2(Config::Section& config, Server* server) : Hydra::Engine::Engine(config, server){
+Hydra::Apache2::Apache2(Config::Section& config, Server* server) : Hydra::Engine::Engine(config, server), m_client(m_details["address"].front(), m_details["port"].front()){
 	m_started = start();
 }
 
@@ -119,17 +119,10 @@ void Hydra::Apache2::request(const Hydra::request& req, Hydra::reply& rep){
 		return;
 	}
 
-	boost::asio::io_service io_service;
-
-	Hydra::Apache2::Client client(
-		io_service, 
+	m_client.run(
 		req,
-		rep,
-		m_details["address"].front(),
-		m_details["port"].front()
+		rep
 	);
-
-	io_service.run();
 
 }
 

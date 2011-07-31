@@ -49,6 +49,7 @@ set(HEADER_FILES
 set(SOURCE_FILES
 	src/apache2.cpp
 	src/apache2_client.cpp
+	src/apache2_connection.cpp
 	src/config.cpp
 	src/connection.cpp
 	src/engine.cpp
