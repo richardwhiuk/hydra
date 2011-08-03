@@ -17,14 +17,14 @@
 
 namespace Hydra {
 
-struct request;
+class Connection;
 
 /// Parser for incoming requests.
-class request_parser {
+class Request_Parser {
 
 public:
 	/// Construct ready to parse the request method.
-	request_parser();
+	Request_Parser();
 
 	/// Reset to initial parser state.
 	void reset();
@@ -34,11 +34,11 @@ public:
 	/// data is required. The InputIterator return value indicates how much of the
 	/// input has been consumed.
 	template <typename InputIterator>
-	boost::tuple<boost::tribool, InputIterator> parse(request& req,
+	boost::tuple<boost::tribool, InputIterator> parse(Connection& con,
 			InputIterator begin, InputIterator end)
 	{
 		while (begin != end){
-			boost::tribool result = consume(req, *begin++);
+			boost::tribool result = consume(con, *begin++);
 			if (result || !result)
 				return boost::make_tuple(result, begin);
 		}
@@ -48,7 +48,7 @@ public:
 
 private:
 	/// Handle the next character of input.
-	boost::tribool consume(request& req, char input);
+	boost::tribool consume(Connection&, char input);
 
 	/// Check if a byte is an HTTP character.
 	static bool is_char(int c);

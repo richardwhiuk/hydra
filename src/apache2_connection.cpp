@@ -18,13 +18,14 @@
 #include <boost/bind.hpp>
 #include "apache2.hpp"
 
-Hydra::Apache2::Client::Connection::Connection(boost::asio::io_service& io_service, const Hydra::request& req, Hydra::reply& rep, Apache2::Client& client) : m_resolver(io_service), m_socket(io_service), m_reply(rep), m_client(client){
+Hydra::Apache2::Client::Connection::Connection(boost::asio::io_service& io_service, Hydra::Connection& con, Apache2::Client& client) : m_resolver(io_service), m_socket(io_service), m_connection(con), m_client(client){
 	// Form the request. We specify the "Connection: close" header so that the
 	// server will close the socket after transmitting the response. This will
 	// allow us to treat all data up until the EOF as the content.
 	std::ostream m_requeststream(&m_request);
+	Request& req = con.request();
 	m_requeststream << req.method << " " << req.uri << " HTTP/1.0" << "\r\n";
-	for(std::vector<header>::const_iterator it = req.headers.begin(); it != req.headers.end(); ++it){
+	for(std::vector<Header>::const_iterator it = req.headers.begin(); it != req.headers.end(); ++it){
 		if(it->name != "Connection"){
 			m_requeststream << it->name << ": " << it->value << "\r\n";
 		}
@@ -103,7 +104,7 @@ void Hydra::Apache2::Client::Connection::handle_read_status_line(const boost::sy
 			return;
 		}
 
-		m_reply.status = Hydra::reply::status_type(status_code);
+		m_connection.reply().status = Hydra::Reply::status_type(status_code);
 
 		// Read the response headers, which are terminated by a blank line.
 		boost::asio::async_read_until(m_socket, m_response, "\r\n\r\n",
@@ -123,11 +124,11 @@ void Hydra::Apache2::Client::Connection::handle_read_headers(const boost::system
 		while (std::getline(response_stream, hstr, '\n') && hstr != "\r"){
 			size_t a;
 			a = hstr.find(':');		
-			Hydra::header nh;
+			Hydra::Header nh;
 			nh.name = hstr.substr(0, a);
 			nh.value = hstr.substr(a+2,hstr.length() - a - 2); 
 			if(nh.name != "Connection" && nh.name != "Keep-Alive"){
-				m_reply.headers.push_back(nh);
+				m_connection.reply().headers.push_back(nh);
 			}
 		}
 
@@ -135,9 +136,7 @@ void Hydra::Apache2::Client::Connection::handle_read_headers(const boost::system
 		if (m_response.size() > 0){
 			std::stringstream ss;
 			std::copy(std::istreambuf_iterator<char>(response_stream), std::istreambuf_iterator<char>(), std::ostreambuf_iterator<char>(ss));
-			m_reply.content = ss.str();
-		} else {
-			m_reply.content = "";
+			m_connection.reply().content(ss.str());
 		}
 
 		// Start reading remaining data until EOF.
@@ -159,7 +158,7 @@ void Hydra::Apache2::Client::Connection::handle_read_content(const boost::system
 			std::istream response_stream(&m_response);
 			std::stringstream ss;
 			std::copy(std::istreambuf_iterator<char>(response_stream), std::istreambuf_iterator<char>(), std::ostreambuf_iterator<char>(ss));
-			m_reply.content.append(ss.str());
+			m_connection.reply().content(ss.str());
 		}
 
 		// Continue reading remaining data until EOF.

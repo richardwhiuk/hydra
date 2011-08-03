@@ -17,6 +17,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/thread/mutex.hpp>
 #include "reply.hpp"
 #include "request.hpp"
 #include "request_handler.hpp"
@@ -25,13 +26,15 @@
 namespace Hydra {
 
 /// Represents a single connection from a client.
-class connection : public boost::enable_shared_from_this<connection>, private boost::noncopyable {
+
+// Handles IO between client and server via async messages.
+
+class Connection : public boost::enable_shared_from_this<Connection>, private boost::noncopyable {
 
 public:
 
 	/// Construct a connection with the given io_service.
-	explicit connection(boost::asio::io_service& io_service,
-	    request_handler& handler);
+	explicit Connection(boost::asio::io_service& io_service, Request_Handler& handler);
 
 	/// Get the socket associated with the connection.
 	boost::asio::ip::tcp::socket& socket();
@@ -39,33 +42,56 @@ public:
 	/// Start the first asynchronous operation for the connection.
 	void start();
 
-private:
-	/// Handle completion of a read operation.
-	void handle_read(const boost::system::error_code& e, std::size_t bytes_transferred);
+	Request& request();
+	
+	Reply& reply();
 
-	/// Handle completion of a write operation.
-	void handle_write(const boost::system::error_code& e);
+	// Called by handler to send buffered data;
+
+	void perform_write();
+
+	// Called to terminate request
+
+	void perform_finish();
+
+private:
+
+	void read(const boost::system::error_code& e, std::size_t bytes_transferred);
+
+
+	// Called by handler to send buffered data.
+
+	void write(const boost::system::error_code& e);
+
+	// Called by connection to send remaining data.
+
+	void finish(const boost::system::error_code& e);
 
 	/// Socket for the connection.
 	boost::asio::ip::tcp::socket m_socket;
 
 	/// The handler used to process the incoming request.
-	request_handler& m_request_handler;
+	Request_Handler& m_request_handler;
 
 	/// Buffer for incoming data.
 	boost::array<char, 8192> m_buffer;
 
 	/// The incoming request.
-	request m_request;
+	Request m_request;
 
 	/// The parser for the incoming request.
-	request_parser m_request_parser;
+	Request_Parser m_request_parser;
 
 	/// The reply to be sent back to the client.
-	reply m_reply;
+	Reply m_reply;
+
+	/// Prevent write overlap.
+	boost::mutex m_write_mux;
+
+
 };
 
-typedef boost::shared_ptr<connection> connection_ptr;
+typedef boost::shared_ptr<Connection> connection_ptr;
 
 }
 

@@ -10,19 +10,22 @@
 //
 
 #include "request_parser.hpp"
-#include "request.hpp"
+#include "connection.hpp"
+#include "reply.hpp"
 
 namespace Hydra {
 
-request_parser::request_parser() : m_state(method_start){
+Request_Parser::Request_Parser() : m_state(method_start){
 
 }
 
-void request_parser::reset(){
+void Request_Parser::reset(){
 	m_state = method_start;
 }
 
-boost::tribool request_parser::consume(request& req, char input){
+boost::tribool Request_Parser::consume(Connection& con, char input){
+
+	Request& req = con.request();
 
 	switch (m_state){
 
@@ -152,7 +155,7 @@ boost::tribool request_parser::consume(request& req, char input){
 		} else if (!is_char(input) || is_ctl(input) || is_tspecial(input)) {
 			return false;
 		} else {
-			req.headers.push_back(header());
+			req.headers.push_back(Header());
 			req.headers.back().name.push_back(input);
 			m_state = header_name;
 			return boost::indeterminate;
@@ -211,17 +214,17 @@ boost::tribool request_parser::consume(request& req, char input){
 	}
 }
 
-bool request_parser::is_char(int c)
+bool Request_Parser::is_char(int c)
 {
 	return c >= 0 && c <= 127;
 }
 
-bool request_parser::is_ctl(int c)
+bool Request_Parser::is_ctl(int c)
 {
 	return (c >= 0 && c <= 31) || (c == 127);
 }
 
-bool request_parser::is_tspecial(int c)
+bool Request_Parser::is_tspecial(int c)
 {
 	switch (c){
 		case '(': case ')': case '<': case '>': case '@':
@@ -234,7 +237,7 @@ bool request_parser::is_tspecial(int c)
 	}
 }
 
-bool request_parser::is_digit(int c)
+bool Request_Parser::is_digit(int c)
 {
 	return c >= '0' && c <= '9';
 }

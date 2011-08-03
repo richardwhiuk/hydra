@@ -76,7 +76,7 @@ bool Hydra::Server::setup(){
 
 		m_io_service_pool = Hydra::io_service_pool_ptr(new io_service_pool(threads));
 
-		m_new_connection = Hydra::connection_ptr(new connection(
+		m_new_connection = Hydra::connection_ptr(new Connection(
 					m_io_service_pool->get_io_service(), 
 					m_request_handler));
 
@@ -217,7 +217,7 @@ void Hydra::Server::handle_accept(const boost::system::error_code& e)
 {
 	if (!e){
 		m_new_connection->start();
-		m_new_connection.reset(new connection(
+		m_new_connection.reset(new Connection(
 			m_io_service_pool->get_io_service(), 
 			m_request_handler));
 		m_acceptor->async_accept(

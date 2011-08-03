@@ -17,20 +17,19 @@
 
 namespace Hydra {
 
-struct reply;
-struct request;
+class Connection;
 
 class Server;
 
 /// The common handler for all incoming requests.
-class request_handler : private boost::noncopyable
+class Request_Handler : private boost::noncopyable
 {
 public:
 	/// Construct with a directory containing files to be served.
-	request_handler(Server* server);
+	Request_Handler(Server* server);
 
 	/// Handle a request and produce a reply.
-	void handle_request(const request& req, reply& rep);
+	void handle_request(Hydra::Connection& con);
 
 private:
 

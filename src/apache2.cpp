@@ -102,27 +102,24 @@ Hydra::Apache2::~Apache2(){
 
 }
 
-void Hydra::Apache2::request(const Hydra::request& req, Hydra::reply& rep){
+void Hydra::Apache2::request(Hydra::Connection& con){
 
 	if(!m_started){
-		rep = reply::stock_reply(reply::service_unavailable);
+		con.reply() = Reply::Stock(Reply::service_unavailable);
 		return;
 	} 
 
 	if(m_details["address"].size() == 0){
-		rep = reply::stock_reply(reply::service_unavailable);
+		con.reply() = Reply::Stock(Reply::service_unavailable);
 		return;
 	}
 
 	if(m_details["port"].size() == 0){
-		rep = reply::stock_reply(reply::service_unavailable);
+		con.reply() = Reply::Stock(Reply::service_unavailable);
 		return;
 	}
 
-	m_client.run(
-		req,
-		rep
-	);
+	m_client.run(con);
 
 }
 

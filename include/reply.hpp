@@ -14,15 +14,33 @@
 
 #include <string>
 #include <vector>
+#include <queue>
 #include <boost/asio.hpp>
+#include <boost/thread/mutex.hpp>
 #include "header.hpp"
 
 namespace Hydra {
 
 /// A reply to be sent to a client.
-struct reply
+class Reply
 {
-	/// The status of the reply.
+	/// Reply Status Codes.
+
+public:
+
+	Reply();
+	Reply& operator=(const Reply&);
+	Reply(const Reply&);
+	~Reply();
+
+	enum reply_state
+	{
+		none,
+		header,
+		partial,
+		done
+	};
+
 	enum status_type
 	{
 		ok = 200,
@@ -41,21 +59,40 @@ struct reply
 		not_implemented = 501,
 		bad_gateway = 502,
 		service_unavailable = 503
-	} status;
+	};
+
+	/// Reply status
+
+	status_type status;
+
+	reply_state state;
 
 	/// The headers to be included in the reply.
-	std::vector<header> headers;
+	std::vector<Hydra::Header> headers;
 
 	/// The content to be sent in the reply.
-	std::string content;
+	
+	std::queue<std::string*> tosend;
+
+	std::vector<std::string*> sending;
+
+	boost::mutex m_tosend_mux;
+	boost::mutex m_sending_mux;
+
+	void content(std::string);
 
 	/// Convert the reply into a vector of buffers. The buffers do not own the
 	/// underlying memory blocks, therefore the reply object must remain valid and
 	/// not be changed until the write operation has completed.
-	std::vector<boost::asio::const_buffer> to_buffers();
+
+	std::vector<boost::asio::const_buffer> buffers();
+
+	/// Last buffers have been sent and underlying data may now be discarded
+
+	void discard();
 
 	/// Get a stock reply.
-	static reply stock_reply(status_type status);
+	static Reply Stock(status_type status);
 };
 
 }

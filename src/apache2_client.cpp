@@ -22,11 +22,11 @@ Hydra::Apache2::Client::Client(const std::string& server, const std::string& por
 
 }
 
-void Hydra::Apache2::Client::run(const Hydra::request& req, Hydra::reply& rep){
+void Hydra::Apache2::Client::run(Hydra::Connection& ccon){
 	
 	boost::asio::io_service ios;
 
-	Connection con(ios,req,rep, *this);
+	Apache2::Client::Connection con(ios, ccon, *this);
 
 	ios.run();
 

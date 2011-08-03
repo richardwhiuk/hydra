@@ -49,7 +49,7 @@ std::vector<std::string> Hydra::Host::alias(){
 	}	
 }
 
-void Hydra::Host::request(const Hydra::request& req, Hydra::reply& rep){
+void Hydra::Host::request(Hydra::Connection& con){ 
 
 	if(m_engine == NULL){
 		m_engine_mux.lock();
@@ -61,7 +61,7 @@ void Hydra::Host::request(const Hydra::request& req, Hydra::reply& rep){
 		m_engine_mux.unlock();
 	}
 
-	m_engine->request(req, rep);
+	m_engine->request(con);
 
 /*	// Decode url to path.
 	std::string request_path;

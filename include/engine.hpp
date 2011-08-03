@@ -9,8 +9,7 @@
 //
 
 #include "config.hpp"
-#include "request.hpp"
-#include "reply.hpp"
+#include "connection.hpp"
 
 #ifndef HYDRA_FILE_ENGINE_HPP
 #define HYDRA_FILE_ENGINE_HPP
@@ -35,7 +34,7 @@ public:
 
 	}
 
-	virtual void request(const Hydra::request&, Hydra::reply&) = 0;
+	virtual void request(Hydra::Connection&) = 0;
 
 protected:
 

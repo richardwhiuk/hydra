@@ -16,7 +16,7 @@
 
 namespace Hydra {
 
-struct header
+struct Header
 {
   std::string name;
   std::string value;

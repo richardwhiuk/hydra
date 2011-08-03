@@ -21,6 +21,7 @@
 namespace Hydra {
 
 class Server;
+class Connection;
 
 class Host { 
 
@@ -34,7 +35,7 @@ public:
 
 	std::vector<std::string> alias();
 
-	void request(const request& req, reply& rep);
+	void request(Connection&);
 
 	~Host();
 

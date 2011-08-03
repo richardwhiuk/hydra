@@ -60,6 +60,7 @@ set(SOURCE_FILES
 	src/request_parser.cpp
 	src/reply.cpp
 	src/server.cpp
+	src/status_strings.cpp
 )
 
 add_executable(hydra ${HEADER_FILES} ${SOURCE_FILES} ${CGI_HEADER_FILES} ${CGI_SOURCE_FILES})

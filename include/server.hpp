@@ -77,7 +77,7 @@ private:
 	Hydra::connection_ptr m_new_connection;
 
 	/// The handler for all incoming requests.
-	Hydra::request_handler m_request_handler;
+	Hydra::Request_Handler m_request_handler;
 
 };
 

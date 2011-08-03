@@ -27,7 +27,7 @@ public:
 
 	virtual ~Apache2();
 
-	virtual void request(const Hydra::request&, Hydra::reply&);
+	virtual void request(Hydra::Connection&);
 
 private:
 
@@ -40,7 +40,7 @@ private:
 
 		const std::string& server();
 
-		void run(const Hydra::request&, Hydra::reply&);
+		void run(Hydra::Connection&);
 
 		~Client();
 
@@ -49,8 +49,7 @@ private:
 		class Connection {
 
 		public:
-
-			Connection(boost::asio::io_service&, const Hydra::request&, Hydra::reply&, Apache2::Client& client);
+			Connection(boost::asio::io_service&, Hydra::Connection&, Apache2::Client& client);
 
 			~Connection();
 
@@ -69,7 +68,8 @@ private:
 			boost::asio::streambuf m_response;
 		
 			Apache2::Client& m_client;
-			Hydra::reply& m_reply;
+			Hydra::Connection& m_connection;		// User -> Hydra connection
+									// this = Hydra->Apache2 connection
 
 		};
 

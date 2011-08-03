@@ -20,33 +20,33 @@
 #include "request.hpp"
 #include "server.hpp"
 
-Hydra::request_handler::request_handler(Server* server) : m_server(server){
+Hydra::Request_Handler::Request_Handler(Server* server) : m_server(server){
 
 }
 
-bool isHost(const Hydra::header h){
+bool isHost(const Hydra::Header h){
 	return (h.name == "Host");
 }
 
-void Hydra::request_handler::handle_request(const Hydra::request& req, Hydra::reply& rep){
+void Hydra::Request_Handler::handle_request(Hydra::Connection& con){
 
 	// Hydra Functionality.
 
-	std::vector<header>::const_iterator it = std::find_if(req.headers.begin(), req.headers.end(), isHost);
+	std::vector<Header>::const_iterator it = std::find_if(con.request().headers.begin(), con.request().headers.end(), isHost);
 
-	if(it == req.headers.end()){
+	if(it == con.request().headers.end()){
 		std::cerr << "Hydra: No Host Header" << std::endl;
-		rep = reply::stock_reply(reply::service_unavailable);
+		con.reply() = Reply::Stock(Reply::service_unavailable);
 		return;
 	}
 
 	Host* host = m_server->host(it->value);
 
 	if(host == NULL){
-		rep = reply::stock_reply(reply::service_unavailable);
+		con.reply() = Reply::Stock(Reply::service_unavailable);
 		return;
 	} else {
-		host->request(req, rep);
+		host->request(con);
 		return;
 	}
 
