@@ -139,6 +139,11 @@ void Hydra::Apache2::Client::Connection::handle_read_headers(const boost::system
 			m_connection.reply().content(ss.str());
 		}
 
+		m_connection.perform_write();
+
+		std::cout << "Async First Write Done. Resuming Read" << std::endl;
+
+
 		// Start reading remaining data until EOF.
 		boost::asio::async_read(m_socket, m_response,
 				boost::asio::transfer_at_least(1),
@@ -150,7 +155,9 @@ void Hydra::Apache2::Client::Connection::handle_read_headers(const boost::system
 }
 
 void Hydra::Apache2::Client::Connection::handle_read_content(const boost::system::error_code& err){
- 
+
+	std::cout << "Handle_Read" << std::endl;
+
 	if (!err){
 
 		// Write all of the data that has been read so far.
@@ -161,6 +168,10 @@ void Hydra::Apache2::Client::Connection::handle_read_content(const boost::system
 			m_connection.reply().content(ss.str());
 		}
 
+//		m_connection.perform_write();
+
+		std::cout << "Async Write Done. Resuming Read" << std::endl;
+
 		// Continue reading remaining data until EOF.
 		boost::asio::async_read(m_socket, m_response,
 				boost::asio::transfer_at_least(1),
@@ -168,6 +179,9 @@ void Hydra::Apache2::Client::Connection::handle_read_content(const boost::system
 					boost::asio::placeholders::error));
 	} else if (err != boost::asio::error::eof){
 		std::cout << "Hydra: Apache2: Error: " << err << "\n";
+	} else {
+		std::cout << "EOF" << std::endl;
 	}
+
 }
 

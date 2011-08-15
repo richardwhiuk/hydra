@@ -18,6 +18,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/condition_variable.hpp>
 #include "reply.hpp"
 #include "request.hpp"
 #include "request_handler.hpp"
@@ -87,6 +88,8 @@ private:
 
 	/// Prevent write overlap.
 	boost::mutex m_write_mux;
+	boost::condition_variable m_write_cv;
+	bool m_writing;
 
 
 };

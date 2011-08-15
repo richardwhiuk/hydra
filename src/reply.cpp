@@ -16,6 +16,7 @@
 #include <string>
 #include <boost/lexical_cast.hpp>
 #include <exception>
+#include <iostream>
 
 Hydra::Reply::Reply() : state(Reply::none){
 
@@ -95,6 +96,8 @@ void Hydra::Reply::discard(){
 
 std::vector<boost::asio::const_buffer> Hydra::Reply::buffers(){
 
+	std::cout << "Buffers" << std::endl;
+
 	std::vector<boost::asio::const_buffer> buffers;
 
 	if(state == Reply::none){
@@ -116,16 +119,30 @@ std::vector<boost::asio::const_buffer> Hydra::Reply::buffers(){
 
 	}
 
+	std::cout << "Buffers (1)" << std::endl;
+
 	if(state == Reply::header || state == Reply::partial){
 
 		m_sending_mux.lock();		// This shouldn't be needed. Oh well.
+
+		std::cout << "Buffers (2) " << std::endl;
+
 		m_tosend_mux.lock();
+
+		std::cout << "Buffers (3)" << std::endl;
 
 		std::size_t strings = tosend.size();
 
 		if(strings == 0){
+			std::cout << "Buffers (4)" << std::endl;
+
 			m_tosend_mux.unlock();
+
+			std::cout << "Buffers (5)" << std::endl;
+
 			m_sending_mux.unlock();
+
+			std::cout << "Buffers (6)" << std::endl;
 			return buffers;
 		}
 
@@ -133,8 +150,12 @@ std::vector<boost::asio::const_buffer> Hydra::Reply::buffers(){
 			sending.push_back(tosend.front());
 			tosend.pop();
 		}
+		
+		std::cout << "Buffers (7)" << std::endl;
 
 		m_tosend_mux.unlock();
+
+		std::cout << "Buffers (8)" << std::endl;
 
 		for(std::vector<std::string*>::iterator it = sending.begin(); it != sending.end(); ++it){
 			buffers.push_back(boost::asio::buffer(*(*it)));
@@ -144,7 +165,11 @@ std::vector<boost::asio::const_buffer> Hydra::Reply::buffers(){
 
 		m_sending_mux.unlock();
 
+		std::cout << "Buffers (9)" << std::endl;
+
 	}	
+
+	std::cout << "End Buffers" << std::endl;
 
 	return buffers;
 }

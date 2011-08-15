@@ -11,12 +11,13 @@
 
 #include "connection.hpp"
 #include <vector>
+#include <iostream>
 #include <boost/bind.hpp>
 #include "request_handler.hpp"
 
 namespace Hydra {
 
-Connection::Connection(boost::asio::io_service& io_service, Request_Handler& handler) : m_socket(io_service), m_request_handler(handler){
+Connection::Connection(boost::asio::io_service& io_service, Request_Handler& handler) : m_socket(io_service), m_request_handler(handler), m_writing(false){
 
 }
 
@@ -76,7 +77,20 @@ void Connection::read(const boost::system::error_code& e, std::size_t bytes_tran
 }
 
 void Connection::perform_write(){
-	m_write_mux.lock();
+
+	std::cout << "Attempting to Write using socket " << &m_socket << " and connection " << this << std::endl;
+
+	boost::unique_lock<boost::mutex> lock(m_write_mux);
+	while(m_writing){
+		std::cout << "." << std::endl;
+		m_write_cv.wait(lock);
+	}
+
+
+	std::cout << "Writing." << std::endl;
+
+	m_writing = true;
+
 	boost::asio::async_write(
 		m_socket, 
 		m_reply.buffers(),
@@ -89,8 +103,18 @@ void Connection::perform_write(){
 }
 
 void Connection::perform_finish(){
-	m_write_mux.lock();
 
+	std::cout << "Attempting to Finish using socket " << &m_socket << " and connection " << this << std::endl;
+
+	boost::unique_lock<boost::mutex> lock(m_write_mux);
+	while(m_writing){
+		m_write_cv.wait(lock);
+	}
+	
+	m_writing = true;
+
+	std::cout << "Finishing........." << std::endl;
+	
 	boost::asio::async_write(
 		m_socket, 
 		m_reply.buffers(),
@@ -103,13 +127,35 @@ void Connection::perform_finish(){
 }
 
 void Connection::write(const boost::system::error_code& e){
+	
+	std::cout << "Discarding...." << std::endl;
+
 	m_reply.discard();
-	m_write_mux.unlock();
+
+	std::cout << "Attempting to stop writing..." << std::endl;
+
+	{
+		boost::lock_guard<boost::mutex> lock(m_write_mux);
+		m_writing = false;
+	}
+
+	std::cout << "Stopped Writing..........." << std::endl;
+
+	m_write_cv.notify_one();
 }
 
 void Connection::finish(const boost::system::error_code& e){
+
 	m_reply.discard();
-	m_write_mux.unlock();
+
+	{
+		boost::lock_guard<boost::mutex> lock(m_write_mux);
+		m_writing = false;
+	}
+
+	std::cout << "Stopped Finishing..........." << std::endl;
+
+	m_write_cv.notify_one();
 
 	if (!e){
 		// Initiate graceful Connection closure.
