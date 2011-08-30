@@ -78,7 +78,7 @@ private:
 	boost::asio::ip::tcp::acceptor* m_acceptor;
 
 	/// The next connection to be accepted.
-	Hydra::connection_ptr m_new_connection;
+	Hydra::Connection::Ptr m_new_connection;
 
 	/// The handler for all incoming requests.
 	Hydra::Request_Handler m_request_handler;

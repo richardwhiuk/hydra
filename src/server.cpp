@@ -80,7 +80,7 @@ bool Hydra::Server::setup(){
 
 		m_io_service_pool = Hydra::io_service_pool_ptr(new io_service_pool(threads));
 
-		m_new_connection = Hydra::connection_ptr(new Connection(
+		m_new_connection = Hydra::Connection::Ptr(new Connection(
 					io_service(), 
 					m_request_handler));
 

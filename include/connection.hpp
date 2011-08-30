@@ -55,6 +55,9 @@ public:
 
 	void perform_finish();
 
+	typedef boost::shared_ptr<Connection> Ptr;
+
+
 private:
 
 	void read(const boost::system::error_code& e, std::size_t bytes_transferred);
@@ -93,8 +96,6 @@ private:
 
 
 };
-
-typedef boost::shared_ptr<Connection> connection_ptr;
 
 }
 
