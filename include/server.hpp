@@ -47,7 +47,7 @@ public:
 
 	// Forked procs need to call this.
 
-	void restore_signals();
+	void restore_signals() const;
 
 private:
 

@@ -151,7 +151,7 @@ void Hydra::Server::stop(){
 
 }
 
-void Hydra::Server::restore_signals(){
+void Hydra::Server::restore_signals() const{
 	pthread_sigmask(SIG_SETMASK, &m_old_mask, 0);
 }
 
