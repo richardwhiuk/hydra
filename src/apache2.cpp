@@ -192,7 +192,7 @@ bool Hydra::Apache2::signal(std::string signal){
 		
 	case 0: {
 
-		m_server.restore_signals();
+		m_hydra.restore_signals();
 
 		if(signal == "start"){
 			mkdirs();

@@ -22,7 +22,7 @@ class Engine {
 
 public:
 
-	Engine(Config::Section& config, Server& server) : m_details(config), m_server(server){
+	Engine(Config::Section& config, Server& hydra) : m_details(config), m_hydra(hydra){
 
 	}
 
@@ -39,7 +39,7 @@ public:
 protected:
 
 	Config::Section& m_details;
-	Server& m_server;
+	Server& m_hydra;
 
 };
 
