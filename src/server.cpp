@@ -35,6 +35,10 @@ Hydra::Server::~Server(){
 
 }
 
+boost::asio::io_service& Hydra::Server::io_service(){
+	return m_io_service_pool->get_io_service();
+}
+
 bool Hydra::Server::setup(){
 
 	if(m_setup){
@@ -77,12 +81,12 @@ bool Hydra::Server::setup(){
 		m_io_service_pool = Hydra::io_service_pool_ptr(new io_service_pool(threads));
 
 		m_new_connection = Hydra::connection_ptr(new Connection(
-					m_io_service_pool->get_io_service(), 
+					io_service(), 
 					m_request_handler));
 
 		// Connection Acceptor
 
-		m_acceptor = new boost::asio::ip::tcp::acceptor(m_io_service_pool->get_io_service());
+		m_acceptor = new boost::asio::ip::tcp::acceptor(io_service());
 	
 		boost::asio::ip::tcp::resolver resolver(m_acceptor->get_io_service());
 		boost::asio::ip::tcp::resolver::query query(address, port);
@@ -218,7 +222,7 @@ void Hydra::Server::handle_accept(const boost::system::error_code& e)
 	if (!e){
 		m_new_connection->start();
 		m_new_connection.reset(new Connection(
-			m_io_service_pool->get_io_service(), 
+			io_service(), 
 			m_request_handler));
 		m_acceptor->async_accept(
 			m_new_connection->socket(),

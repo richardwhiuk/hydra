@@ -49,6 +49,10 @@ public:
 
 	void restore_signals() const;
 
+	// Hosts need this to spawn proxy connections
+
+	boost::asio::io_service& io_service();
+
 private:
 
 	/// Handle completion of an asynchronous accept operation.
