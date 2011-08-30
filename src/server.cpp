@@ -35,7 +35,7 @@ Hydra::Server::~Server(){
 
 }
 
-boost::asio::io_service& Hydra::Server::io_service(){
+boost::asio::io_service& Hydra::Server::io_service() const {
 	return m_io_service_pool->get_io_service();
 }
 
