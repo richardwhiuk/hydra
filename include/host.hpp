@@ -27,7 +27,7 @@ class Host {
 
 public:
 
-	explicit Host(Config::Section details, Server* server);
+	explicit Host(Config::Section details, Server& server);
 
 	typedef std::vector<std::string> Aliases;
 
@@ -43,7 +43,7 @@ private:
 
 	Config::Section m_details;
 	Engine* volatile m_engine;	// Can be modified by a different thread.
-	Server* m_server;
+	Server& m_server;
 	boost::mutex m_engine_mux;
 
 };

@@ -11,7 +11,7 @@
 #include "engine.hpp"
 #include "apache2.hpp"
 
-Hydra::Engine* Hydra::Engine::Create(std::string engine, Hydra::Config::Section& details, Hydra::Server* server){
+Hydra::Engine* Hydra::Engine::Create(std::string engine, Hydra::Config::Section& details, Hydra::Server& server){
 	if(engine == "apache2")
 		return new Apache2(details, server);
 

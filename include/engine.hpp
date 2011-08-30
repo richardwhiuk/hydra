@@ -22,11 +22,11 @@ class Engine {
 
 public:
 
-	Engine(Config::Section& config, Server* server) : m_details(config), m_server(server){
+	Engine(Config::Section& config, Server& server) : m_details(config), m_server(server){
 
 	}
 
-	static Engine* Create(std::string engine, Config::Section& details, Server* server);
+	static Engine* Create(std::string engine, Config::Section& details, Server& server);
 
 	static bool Valid(std::string engine);
 
@@ -39,7 +39,7 @@ public:
 protected:
 
 	Config::Section& m_details;
-	Server* m_server;
+	Server& m_server;
 
 };
 

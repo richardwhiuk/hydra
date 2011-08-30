@@ -23,7 +23,7 @@ class Apache2 : public Engine {
 
 public:
 
-	Apache2(Config::Section& config, Server* server);
+	Apache2(Config::Section& config, Server& server);
 
 	virtual ~Apache2();
 

@@ -11,7 +11,7 @@
 
 #include "host.hpp"
 
-Hydra::Host::Host(Config::Section details, Server* server) : m_details(details), m_engine(NULL), m_server(server) {
+Hydra::Host::Host(Config::Section details, Server& server) : m_details(details), m_engine(NULL), m_server(server) {
 
 }
 

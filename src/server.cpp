@@ -127,7 +127,7 @@ void Hydra::Server::run(){
 bool Hydra::Server::setup_hosts(){
 
 	for(Hydra::Config::Iterator it = m_config.begin(); it != m_config.end(); ++it){
-		Hydra::Host* host = new Hydra::Host(*it, this);
+		Hydra::Host* host = new Hydra::Host(*it, *this);
 		if(host->valid()){
 			m_configs.insert(std::pair<std::string, Host*>(it->name(),host));
 		}

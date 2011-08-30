@@ -28,7 +28,7 @@ void strmasscpy(char** dst, size_t place, const std::string src){
 	std::strcpy(dst[place], src.c_str());
 }
 
-Hydra::Apache2::Apache2(Config::Section& config, Server* server) : Hydra::Engine::Engine(config, server), m_client(m_details["address"].front(), m_details["port"].front()){
+Hydra::Apache2::Apache2(Config::Section& config, Server& server) : Hydra::Engine::Engine(config, server), m_client(m_details["address"].front(), m_details["port"].front()){
 	m_started = start();
 }
 
@@ -192,7 +192,7 @@ bool Hydra::Apache2::signal(std::string signal){
 		
 	case 0: {
 
-		m_server->restore_signals();
+		m_server.restore_signals();
 
 		if(signal == "start"){
 			mkdirs();
