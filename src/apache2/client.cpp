@@ -16,17 +16,22 @@
 #include <string>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
-#include "apache2.hpp"
+#include <apache2/connection.hpp>
+#include <apache2/client.hpp>
 
-Hydra::Apache2::Client::Client(const std::string& server, const std::string& port) : m_server(server), m_port(port){
+Hydra::Apache2::Client::Client(Hydra::Apache2::Engine& engine) : m_engine(engine){
 
+}
+
+bool Hydra::Apache2::Client::ready(){
+	return true;
 }
 
 void Hydra::Apache2::Client::run(Hydra::Connection& ccon){
 	
 	boost::asio::io_service ios;
 
-	Apache2::Client::Connection con(ios, ccon, *this);
+	Apache2::Connection con(ios, ccon, *this);
 
 	ios.run();
 

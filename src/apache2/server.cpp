@@ -9,7 +9,8 @@
 //
 
 #include "server.hpp"
-#include "apache2.hpp"
+#include <apache2.hpp>
+#include <apache2/server.hpp>
 
 #include "errno.h"
 #include <iostream>
@@ -28,21 +29,17 @@ void strmasscpy(char** dst, size_t place, const std::string src){
 	std::strcpy(dst[place], src.c_str());
 }
 
-Hydra::Apache2::Apache2(Config::Section& config, Server& server) : Hydra::Engine::Engine(config, server), m_client(m_details["address"].front(), m_details["port"].front()){
-	m_started = start();
-}
-
-bool Hydra::Apache2::start(){
+Hydra::Apache2::Server::Server(Hydra::Apache2::Engine& engine) : m_engine(engine){
 
 	const char* ustr = "nobody";
 	const char* gstr = "nogroup";
 
-	if(m_details["user"].size() > 0){
-		ustr = m_details["user"].front().c_str();
+	if(m_engine.user().size() > 0){
+		ustr = m_engine.user().front().c_str();
 	}
 
-	if(m_details["group"].size() > 0){
-		gstr = m_details["group"].front().c_str();
+	if(m_engine.group().size() > 0){
+		gstr = m_engine.group().front().c_str();
 	}
 
 	{
@@ -53,12 +50,12 @@ bool Hydra::Apache2::start(){
 		int result = getpwnam_r(ustr, &ustruct, buffer, buf, &udata);
 
 		if(result != 0){
-			std::cerr << "Hydra: Apache2: [" << m_details.name() << "] User Data Lookup Failed." << std::endl;
+			std::cerr << "Hydra: Apache2: [" << m_engine.name() << "] User Data Lookup Failed." << std::endl;
 		} 
 
 		if(udata == 0){
-			std::cerr << "Hydra: Apache2: [" << m_details.name() << "] User Data Not Found." << std::endl;
-			return false;
+			std::cerr << "Hydra: Apache2: [" << m_engine.name() << "] User Data Not Found." << std::endl;
+			return;
 		}
 
 		m_uid = udata->pw_uid;
@@ -75,12 +72,12 @@ bool Hydra::Apache2::start(){
 		int result = getgrnam_r(gstr, &gstruct, buffer, buf, &gdata);
 
 		if(result != 0){
-			std::cerr << "Hydra: Apache2: [" << m_details.name() << "] Group Data Lookup Failed." << std::endl;
+			std::cerr << "Hydra: Apache2: [" << m_engine.name() << "] Group Data Lookup Failed." << std::endl;
 		} 
 
 		if(gdata == 0){
-			std::cerr << "Hydra: Apache2: [" << m_details.name() << "] Group Data Not Found." << std::endl;
-			return false;
+			std::cerr << "Hydra: Apache2: [" << m_engine.name() << "] Group Data Not Found." << std::endl;
+			return;
 		}
 
 		m_gid = gdata->gr_gid;
@@ -90,11 +87,19 @@ bool Hydra::Apache2::start(){
 
 	}
 
-	return signal("start");
+	if(signal("start"))
+		m_started = true;
 
 }
 
-Hydra::Apache2::~Apache2(){
+bool Hydra::Apache2::Server::ready(){
+	if(!m_started){
+		return false;
+	} 
+	return true;
+}
+
+Hydra::Apache2::Server::~Server(){
 
 	if(m_started){
 		signal("stop");
@@ -102,28 +107,7 @@ Hydra::Apache2::~Apache2(){
 
 }
 
-void Hydra::Apache2::request(Hydra::Connection& con){
-
-	if(!m_started){
-		con.reply() = Reply::Stock(Reply::service_unavailable);
-		return;
-	} 
-
-	if(m_details["address"].size() == 0){
-		con.reply() = Reply::Stock(Reply::service_unavailable);
-		return;
-	}
-
-	if(m_details["port"].size() == 0){
-		con.reply() = Reply::Stock(Reply::service_unavailable);
-		return;
-	}
-
-	m_client.run(con);
-
-}
-
-void Hydra::Apache2::mkdirs(){
+void Hydra::Apache2::Server::mkdirs(){
 	if(mkdir("/var/run/hydra", 00775) && errno != EEXIST)
 		_exit(-2);
 
@@ -131,7 +115,7 @@ void Hydra::Apache2::mkdirs(){
 		_exit(-2);
 
 	{
-		std::string rds = ("/var/run/hydra/apache2/" + m_details.name());
+		std::string rds = ("/var/run/hydra/apache2/" + m_engine.name());
 		const char* rdc = rds.c_str();
 
 		if(mkdir(rdc, 00775) && errno != EEXIST)
@@ -150,7 +134,7 @@ void Hydra::Apache2::mkdirs(){
 
 	{
 	
-		std::string lds = ("/var/log/hydra/apache2/" + m_details.name());
+		std::string lds = ("/var/log/hydra/apache2/" + m_engine.name());
 		const char* ldc = lds.c_str();
 	
 		if(mkdir(ldc, 00775) && errno != EEXIST)
@@ -169,7 +153,7 @@ void Hydra::Apache2::mkdirs(){
 	
 	{
 	
-		std::string lds = ("/var/lock/hydra/apache2/" + m_details.name());
+		std::string lds = ("/var/lock/hydra/apache2/" + m_engine.name());
 		const char* ldc = lds.c_str();
 	
 		if(mkdir(ldc, 00775) && errno != EEXIST)
@@ -182,7 +166,7 @@ void Hydra::Apache2::mkdirs(){
 
 }
 
-bool Hydra::Apache2::signal(std::string signal){
+bool Hydra::Apache2::Server::signal(std::string signal){
 	pid_t pid = fork();
 
 	switch(pid){
@@ -192,7 +176,7 @@ bool Hydra::Apache2::signal(std::string signal){
 		
 	case 0: {
 
-		m_hydra.restore_signals();
+		m_engine.server().restore_signals();
 
 		if(signal == "start"){
 			mkdirs();
@@ -202,13 +186,13 @@ bool Hydra::Apache2::signal(std::string signal){
 
 		std::string apconfig("/etc/apache2/apache2.conf");
 
-		if(m_details["config"].size() > 0){
-			apconfig = m_details["config"].front();
+		if(m_engine.config().size() > 0){
+			apconfig = m_engine.config().front();
 		}
 
 		char* newargv[10];
 
-		const std::string name = m_details.name();
+		const std::string name = m_engine.name();
 
 		strmasscpy(newargv, 0, "/usr/sbin/apache2");
 		strmasscpy(newargv, 1, "-k");

@@ -8,12 +8,12 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include "engine.hpp"
-#include "apache2.hpp"
+#include <engine.hpp>
+#include <apache2/engine.hpp>
 
 Hydra::Engine* Hydra::Engine::Create(std::string engine, Hydra::Config::Section& details, Hydra::Server& server){
 	if(engine == "apache2")
-		return new Apache2(details, server);
+		return new Hydra::Apache2::Engine(details, server);
 
 	return NULL;
 }

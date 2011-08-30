@@ -16,9 +16,9 @@
 #include <string>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
-#include "apache2.hpp"
+#include <apache2/connection.hpp>
 
-Hydra::Apache2::Client::Connection::Connection(boost::asio::io_service& io_service, Hydra::Connection& con, Apache2::Client& client) : m_resolver(io_service), m_socket(io_service), m_connection(con), m_client(client){
+Hydra::Apache2::Connection::Connection(boost::asio::io_service& io_service, Hydra::Connection& con, Apache2::Client& client) : m_resolver(io_service), m_socket(io_service), m_connection(con), m_client(client){
 	// Form the request. We specify the "Connection: close" header so that the
 	// server will close the socket after transmitting the response. This will
 	// allow us to treat all data up until the EOF as the content.
@@ -37,58 +37,58 @@ Hydra::Apache2::Client::Connection::Connection(boost::asio::io_service& io_servi
 	// into a list of endpoints.
 	boost::asio::ip::tcp::resolver::query query(m_client.server(), m_client.port());
 	m_resolver.async_resolve(query,
-		boost::bind(&Hydra::Apache2::Client::Connection::handle_resolve, this,
+		boost::bind(&Hydra::Apache2::Connection::handle_resolve, this,
 			boost::asio::placeholders::error,
 			boost::asio::placeholders::iterator));
 }
 
-Hydra::Apache2::Client::Connection::~Connection(){
+Hydra::Apache2::Connection::~Connection(){
 
 }
 
-void Hydra::Apache2::Client::Connection::handle_resolve(const boost::system::error_code& err, boost::asio::ip::tcp::resolver::iterator endpoint_iterator){
+void Hydra::Apache2::Connection::handle_resolve(const boost::system::error_code& err, boost::asio::ip::tcp::resolver::iterator endpoint_iterator){
 	if (!err){
 		// Attempt a connection to the first endpoint in the list. Each endpoint
 		// will be tried until we successfully establish a connection.
 		boost::asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
 		m_socket.async_connect(endpoint,
-				boost::bind(&Hydra::Apache2::Client::Connection::handle_connect, this,
+				boost::bind(&Hydra::Apache2::Connection::handle_connect, this,
 					boost::asio::placeholders::error, ++endpoint_iterator));
 	} else {
 		std::cerr << "Hydra: Apache2: " << err.message() << std::endl;
 	}
 }
 
-void Hydra::Apache2::Client::Connection::handle_connect(const boost::system::error_code& err, boost::asio::ip::tcp::resolver::iterator endpoint_iterator){ 
+void Hydra::Apache2::Connection::handle_connect(const boost::system::error_code& err, boost::asio::ip::tcp::resolver::iterator endpoint_iterator){ 
 	if (!err){
 		// The connection was successful. Send the request.
 		boost::asio::async_write(m_socket, m_request,
-				boost::bind(&Hydra::Apache2::Client::Connection::handle_write_request, this,
+				boost::bind(&Hydra::Apache2::Connection::handle_write_request, this,
 					boost::asio::placeholders::error));
 	} else if (endpoint_iterator != boost::asio::ip::tcp::resolver::iterator()){
 		// The connection failed. Try the next endpoint in the list.
 		m_socket.close();
 		boost::asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
 		m_socket.async_connect(endpoint,
-				boost::bind(&Hydra::Apache2::Client::Connection::handle_connect, this,
+				boost::bind(&Hydra::Apache2::Connection::handle_connect, this,
 					boost::asio::placeholders::error, ++endpoint_iterator));
 	} else {
 		std::cerr << "Hydra: Apache2: " << err.message() << "\n";
 	}
 }
 
-void Hydra::Apache2::Client::Connection::handle_write_request(const boost::system::error_code& err){
+void Hydra::Apache2::Connection::handle_write_request(const boost::system::error_code& err){
 	if (!err){
 		// Read the response status line.
 		boost::asio::async_read_until(m_socket, m_response, "\r\n",
-				boost::bind(&Hydra::Apache2::Client::Connection::handle_read_status_line, this,
+				boost::bind(&Hydra::Apache2::Connection::handle_read_status_line, this,
 					boost::asio::placeholders::error));
 	} else {
 		std::cout << "Hydra: Apache2: " << err.message() << "\n";
 	}
 }
 
-void Hydra::Apache2::Client::Connection::handle_read_status_line(const boost::system::error_code& err){
+void Hydra::Apache2::Connection::handle_read_status_line(const boost::system::error_code& err){
 	if (!err){
 		// Check that response is OK.
 		std::istream m_responsestream(&m_response);
@@ -108,14 +108,14 @@ void Hydra::Apache2::Client::Connection::handle_read_status_line(const boost::sy
 
 		// Read the response headers, which are terminated by a blank line.
 		boost::asio::async_read_until(m_socket, m_response, "\r\n\r\n",
-				boost::bind(&Hydra::Apache2::Client::Connection::handle_read_headers, this,
+				boost::bind(&Hydra::Apache2::Connection::handle_read_headers, this,
 					boost::asio::placeholders::error));
 	} else {
 		std::cout << "Hydra: Apache2: Error: " << err << std::endl;
 	}
 }
 
-void Hydra::Apache2::Client::Connection::handle_read_headers(const boost::system::error_code& err){
+void Hydra::Apache2::Connection::handle_read_headers(const boost::system::error_code& err){
 	if (!err){
 		// Process the response headers.
 		std::istream response_stream(&m_response);
@@ -147,14 +147,14 @@ void Hydra::Apache2::Client::Connection::handle_read_headers(const boost::system
 		// Start reading remaining data until EOF.
 		boost::asio::async_read(m_socket, m_response,
 				boost::asio::transfer_at_least(1),
-				boost::bind(&Hydra::Apache2::Client::Connection::handle_read_content, this,
+				boost::bind(&Hydra::Apache2::Connection::handle_read_content, this,
 					boost::asio::placeholders::error));
 	} else {
 		std::cout << "Hydra: Apache2: Error: " << err << "\n";
 	}
 }
 
-void Hydra::Apache2::Client::Connection::handle_read_content(const boost::system::error_code& err){
+void Hydra::Apache2::Connection::handle_read_content(const boost::system::error_code& err){
 
 	std::cout << "Handle_Read" << std::endl;
 
@@ -175,7 +175,7 @@ void Hydra::Apache2::Client::Connection::handle_read_content(const boost::system
 		// Continue reading remaining data until EOF.
 		boost::asio::async_read(m_socket, m_response,
 				boost::asio::transfer_at_least(1),
-				boost::bind(&Hydra::Apache2::Client::Connection::handle_read_content, this,
+				boost::bind(&Hydra::Apache2::Connection::handle_read_content, this,
 					boost::asio::placeholders::error));
 	} else if (err != boost::asio::error::eof){
 		std::cout << "Hydra: Apache2: Error: " << err << "\n";

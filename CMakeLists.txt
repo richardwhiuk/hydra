@@ -30,8 +30,26 @@ configure_file (
 
 include_directories("include" "${PROJECT_BINARY_DIR}/include")
 
+# Apache 2
+
+set(APACHE2_HEADER_FILES
+	include/apache2/engine.hpp
+	include/apache2/client.hpp
+	include/apache2/connection.hpp
+	include/apache2/server.hpp
+)
+
+set(APACHE2_SOURCE_FILES
+	src/apache2/engine.cpp
+	src/apache2/client.cpp
+	src/apache2/connection.cpp
+	src/apache2/server.cpp
+)
+
+# Core
+
 set(HEADER_FILES
-	include/apache2.hpp
+	${APACHE2_HEADER_FILES}
 	include/config.hpp
 	include/connection.hpp
 	include/engine.hpp
@@ -47,9 +65,7 @@ set(HEADER_FILES
 )
 
 set(SOURCE_FILES
-	src/apache2.cpp
-	src/apache2_client.cpp
-	src/apache2_connection.cpp
+	${APACHE2_SOURCE_FILES}
 	src/config.cpp
 	src/connection.cpp
 	src/engine.cpp
