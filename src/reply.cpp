@@ -18,174 +18,210 @@
 #include <exception>
 #include <iostream>
 
-Hydra::Reply::Reply() : state(Reply::none){
+Hydra::Reply::Reply() : m_in_state(Reply::state_none), m_out_state(Reply::state_none), m_content_added(false), m_q_data(false){
 
 }
 
 Hydra::Reply::~Reply(){
 
-	for(std::vector<std::string*>::iterator it = sending.begin(); it != sending.end(); ++it){
+	for(std::vector<std::string*>::iterator it = m_out.begin(); it != m_out.end(); ++it){
 		delete (*it);
 	}
-	sending.clear();
 
-	std::size_t size = tosend.size();
+	std::size_t size = m_in.size();
 
 	while(size > 0){
-		delete tosend.front();
-		tosend.pop();
+		delete m_in.front();
+		m_in.pop();
 		--size;
 	}
 
 }
 
-Hydra::Reply& Hydra::Reply::operator=(const Reply& rhs){
-	if(this == &rhs){
-		return *this;
+// In
+
+void Hydra::Reply::status(status_type status){
+	m_status = status;
+	{
+		boost::lock_guard<boost::mutex> in_lock(m_in_mutex);
+		m_in_state = state_status;
 	}
+	m_in_cond.notify_one();
+}
 
-	if(state != Reply::none || sending.size() > 0 || rhs.sending.size() > 0){
-		throw std::runtime_error("Invalid Reply Assignment");
+void Hydra::Reply::header(Hydra::Header& header){
+	m_headers.push_back(header);
+}
+
+void Hydra::Reply::headers_complete(){
+	{
+		boost::lock_guard<boost::mutex> in_lock(m_in_mutex);
+		m_in_state = state_header;
 	}
-
-	headers = rhs.headers;
-
-	std::size_t size = tosend.size();
-
-	while(size > 0){
-		delete tosend.front();
-		tosend.pop();
-		--size;
-	}
-
-	std::queue<std::string*> nts = rhs.tosend;
-
-	size = nts.size();
+	m_in_cond.notify_one();
 	
-	while(size > 0){
-		tosend.push(nts.front());
-		nts.pop();
-		--size;
-	}
-
-	state = rhs.state;
-	status = rhs.status;
-
-	return *this;
-}
-
-Hydra::Reply::Reply(const Reply& rhs){
-	this->operator=(rhs);
 }
 
 void Hydra::Reply::content(std::string content){
 	std::string* str = new std::string(content);
-	m_tosend_mux.lock();
-	tosend.push(str);
-	m_tosend_mux.unlock();
+
+	if(m_content_added){
+		{
+			boost::lock_guard<boost::mutex> in_lock(m_in_mutex);
+			m_in_state = state_partial;
+		}
+		m_content_added = true;
+	}
+	
+	m_in_cond.notify_one();
+
+	{
+		boost::lock_guard<boost::mutex> q_lock(m_q_mutex);
+		m_q_data = true;
+		m_in.push(str);
+	}
+	m_q_cond.notify_one();
+}
+
+void Hydra::Reply::finish(){
+	
+	{
+		boost::lock_guard<boost::mutex> in_lock(m_in_mutex);
+		m_in_state = state_done;
+	}
+
+	m_in_cond.notify_one();
+
+}
+
+// Stock Reply
+
+void Hydra::Reply::stock(status_type status){
+	m_status = status;
+	std::string* content = new std::string(stock_replies::to_string(status));
+
+	m_headers.resize(2);
+	m_headers[0].name = "Content-Length";
+	m_headers[0].value = boost::lexical_cast<std::string>(content->size());
+	m_headers[1].name = "Content-Type";
+	m_headers[1].value = "text/html";
+	m_content_added = true;
+
+	{
+		boost::lock_guard<boost::mutex> in_lock(m_in_mutex);
+		m_in_state = state_done;
+	}
+
+	m_in_cond.notify_one();
+
+	{
+		boost::lock_guard<boost::mutex> q_lock(m_q_mutex);
+		m_q_data = true;
+		m_in.push(content);
+	}
+
+	m_q_cond.notify_one();
+
+}
+
+// Out
+
+bool Hydra::Reply::buffer(std::vector<boost::asio::const_buffer>& buffers){
+
+	boost::unique_lock<boost::mutex> in_lock(m_in_mutex);
+
+	switch(m_out_state){
+		case state_none:
+
+			// Output Status
+
+			while(m_in_state <= state_none){
+				m_in_cond.wait(in_lock);
+			}
+
+			buffers.push_back(status_strings::to_buffer(m_status));	
+			m_out_state = state_status;
+
+			return true;
+		
+		case state_status:
+
+			// Output Header
+
+			while(m_in_state <= state_status){
+				m_in_cond.wait(in_lock);
+			}
+
+			for(std::size_t i = 0; i < m_headers.size(); ++i){
+				Header& h = m_headers[i];
+				buffers.push_back(boost::asio::buffer(h.name));
+				buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
+				buffers.push_back(boost::asio::buffer(h.value));
+				buffers.push_back(boost::asio::buffer(misc_strings::crlf));
+			}
+
+			buffers.push_back(boost::asio::buffer(misc_strings::crlf));
+
+			m_out_state = state_header;
+
+			return true;
+
+		case state_header:
+
+			// Output Content
+
+			while(m_in_state <= state_partial){
+				m_in_cond.wait(in_lock);
+			}
+
+		case state_partial:
+
+			{
+				boost::unique_lock<boost::mutex> q_lock(m_q_mutex);
+				while(m_q_data == false){
+					m_q_cond.wait(q_lock);
+				}
+
+				std::size_t q_size = m_in.size();
+
+				for(; q_size > 0; --q_size){
+					m_out.push_back(m_in.front());
+					m_in.pop();
+				}
+				
+				m_q_data = false;
+
+			}
+
+			for(std::vector<std::string*>::iterator it = m_out.begin(); it != m_out.end(); ++it){
+				buffers.push_back(boost::asio::buffer(*(*it)));
+			}
+			
+			if(m_in_state == state_done){
+				m_out_state = state_done;
+			} else {
+				m_out_state = state_partial;
+			}
+
+			return true;
+
+		case state_done:
+
+			return false;
+
+	}
+
 }
 
 void Hydra::Reply::discard(){
-	m_sending_mux.lock();
-	for(std::vector<std::string*>::iterator it = sending.begin(); it != sending.end(); ++it){
+
+	// Release buffers.
+
+	for(std::vector<std::string*>::iterator it = m_out.begin(); it != m_out.end(); ++it){
 		delete (*it);
 	}
-	sending.clear();
-	m_sending_mux.unlock();
+
+	m_out.clear();
+
 }
-
-std::vector<boost::asio::const_buffer> Hydra::Reply::buffers(){
-
-	std::cout << "Buffers" << std::endl;
-
-	std::vector<boost::asio::const_buffer> buffers;
-
-	if(state == Reply::none){
-
-		buffers.push_back(status_strings::to_buffer(status));
-
-		for (std::size_t i = 0; i < headers.size(); ++i){
-	
-			Header& h = headers[i];
-			buffers.push_back(boost::asio::buffer(h.name));
-			buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
-			buffers.push_back(boost::asio::buffer(h.value));
-			buffers.push_back(boost::asio::buffer(misc_strings::crlf));
-		}
-
-		buffers.push_back(boost::asio::buffer(misc_strings::crlf));
-
-		state = header;
-
-	}
-
-	std::cout << "Buffers (1)" << std::endl;
-
-	if(state == Reply::header || state == Reply::partial){
-
-		m_sending_mux.lock();		// This shouldn't be needed. Oh well.
-
-		std::cout << "Buffers (2) " << std::endl;
-
-		m_tosend_mux.lock();
-
-		std::cout << "Buffers (3)" << std::endl;
-
-		std::size_t strings = tosend.size();
-
-		if(strings == 0){
-			std::cout << "Buffers (4)" << std::endl;
-
-			m_tosend_mux.unlock();
-
-			std::cout << "Buffers (5)" << std::endl;
-
-			m_sending_mux.unlock();
-
-			std::cout << "Buffers (6)" << std::endl;
-			return buffers;
-		}
-
-		for(; strings > 0; --strings){
-			sending.push_back(tosend.front());
-			tosend.pop();
-		}
-		
-		std::cout << "Buffers (7)" << std::endl;
-
-		m_tosend_mux.unlock();
-
-		std::cout << "Buffers (8)" << std::endl;
-
-		for(std::vector<std::string*>::iterator it = sending.begin(); it != sending.end(); ++it){
-			buffers.push_back(boost::asio::buffer(*(*it)));
-		}
-	
-		state = Reply::partial;
-
-		m_sending_mux.unlock();
-
-		std::cout << "Buffers (9)" << std::endl;
-
-	}	
-
-	std::cout << "End Buffers" << std::endl;
-
-	return buffers;
-}
-
-Hydra::Reply Hydra::Reply::Stock(Reply::status_type status)
-{
-	Reply rep;
-	rep.status = status;
-	std::string content = stock_replies::to_string(status);
-	rep.content(content);
-	rep.headers.resize(2);
-	rep.headers[0].name = "Content-Length";
-	rep.headers[0].value = boost::lexical_cast<std::string>(content.size());
-	rep.headers[1].name = "Content-Type";
-	rep.headers[1].value = "text/html";
-	return rep;
-}
-
 

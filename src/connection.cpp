@@ -50,11 +50,11 @@ void Connection::read(const boost::system::error_code& e, std::size_t bytes_tran
 	
 			m_request_handler.handle_request(shared_from_this());
 
-			perform_finish();
+			write();
 		} else if (!result) {
-			m_reply = Reply::Stock(Reply::bad_request);
+			m_reply.stock(Reply::bad_request);
 
-			perform_finish();
+			write();
 		}
 		else
 		{
@@ -76,98 +76,39 @@ void Connection::read(const boost::system::error_code& e, std::size_t bytes_tran
 	// handler returns. The Connection class's destructor closes the socket.
 }
 
-void Connection::perform_write(){
+void Connection::write(){
 
-	std::cout << "Attempting to Write using socket " << &m_socket << " and connection " << this << std::endl;
+	std::vector<boost::asio::const_buffer> write_buffer;
 
-	boost::unique_lock<boost::mutex> lock(m_write_mux);
-	while(m_writing){
-		std::cout << "." << std::endl;
-		m_write_cv.wait(lock);
-	}
+	if(m_reply.buffer(write_buffer)){
+		
+		// We have a buffer. Let's send it.
+
+		boost::asio::async_write(
+			m_socket,
+			write_buffer,
+			boost::bind(
+				&Connection::perform_write,
+				shared_from_this(),
+				boost::asio::placeholders::error
+			)
+		);
 
 
-	std::cout << "Writing." << std::endl;
-
-	m_writing = true;
-
-	boost::asio::async_write(
-		m_socket, 
-		m_reply.buffers(),
-		boost::bind(
-			&Connection::write, 
-			shared_from_this(),
-			boost::asio::placeholders::error
-		)
-	);
-}
-
-void Connection::perform_finish(){
-
-	std::cout << "Attempting to Finish using socket " << &m_socket << " and connection " << this << std::endl;
-
-	boost::unique_lock<boost::mutex> lock(m_write_mux);
-	while(m_writing){
-		m_write_cv.wait(lock);
-	}
-	
-	m_writing = true;
-
-	std::cout << "Finishing........." << std::endl;
-	
-	boost::asio::async_write(
-		m_socket, 
-		m_reply.buffers(),
-		boost::bind(
-			&Connection::finish, 
-			shared_from_this(),
-			boost::asio::placeholders::error
-		)
-	);
-}
-
-void Connection::write(const boost::system::error_code& e){
-	
-	std::cout << "Discarding...." << std::endl;
-
-	m_reply.discard();
-
-	std::cout << "Attempting to stop writing..." << std::endl;
-
-	{
-		boost::lock_guard<boost::mutex> lock(m_write_mux);
-		m_writing = false;
-	}
-
-	std::cout << "Stopped Writing..........." << std::endl;
-
-	m_write_cv.notify_one();
-}
-
-void Connection::finish(const boost::system::error_code& e){
-
-	m_reply.discard();
-
-	{
-		boost::lock_guard<boost::mutex> lock(m_write_mux);
-		m_writing = false;
-	}
-
-	std::cout << "Stopped Finishing..........." << std::endl;
-
-	m_write_cv.notify_one();
-
-	if (!e){
-		// Initiate graceful Connection closure.
+	} else {
 		boost::system::error_code ignored_ec;
-
 		m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
 	}
 
-	// No new asynchronous operations are started. This means that all shared_ptr
-	// references to the Connection object will disappear and the object will be
-	// destroyed automatically after this handler returns. The Connection class's
-	// destructor closes the socket.
+}
+
+void Connection::perform_write(const boost::system::error_code& e){
+
+	m_reply.discard();	
+
+	if(!e){
+		write();
+	}
 }
 
 }

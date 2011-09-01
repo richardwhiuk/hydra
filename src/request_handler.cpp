@@ -36,14 +36,14 @@ void Hydra::Request_Handler::handle_request(Hydra::Connection::Ptr con){
 
 	if(it == con->request().headers.end()){
 		std::cerr << "Hydra: No Host Header" << std::endl;
-		con->reply() = Reply::Stock(Reply::service_unavailable);
+		con->reply().stock(Reply::service_unavailable);
 		return;
 	}
 
 	Host* host = m_server->host(it->value);
 
 	if(host == NULL){
-		con->reply() = Reply::Stock(Reply::service_unavailable);
+		con->reply().stock(Reply::service_unavailable);
 		return;
 	} else {
 		host->request(con);

@@ -17,6 +17,7 @@
 #include <queue>
 #include <boost/asio.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/condition_variable.hpp>
 #include "header.hpp"
 
 namespace Hydra {
@@ -28,17 +29,13 @@ class Reply
 
 public:
 
-	Reply();
-	Reply& operator=(const Reply&);
-	Reply(const Reply&);
-	~Reply();
-
 	enum reply_state
 	{
-		none,
-		header,
-		partial,
-		done
+		state_none,
+		state_status,
+		state_header,
+		state_partial,
+		state_done
 	};
 
 	enum status_type
@@ -61,38 +58,71 @@ public:
 		service_unavailable = 503
 	};
 
-	/// Reply status
+	Reply();
+	~Reply();
 
-	status_type status;
+	// Used by the Engine to set the reply.
 
-	reply_state state;
+	void status(status_type status);
 
-	/// The headers to be included in the reply.
-	std::vector<Hydra::Header> headers;
+	void header(Hydra::Header& header);
 
-	/// The content to be sent in the reply.
-	
-	std::queue<std::string*> tosend;
-
-	std::vector<std::string*> sending;
-
-	boost::mutex m_tosend_mux;
-	boost::mutex m_sending_mux;
+	void headers_complete();
 
 	void content(std::string);
 
-	/// Convert the reply into a vector of buffers. The buffers do not own the
-	/// underlying memory blocks, therefore the reply object must remain valid and
-	/// not be changed until the write operation has completed.
+	void finish();
 
-	std::vector<boost::asio::const_buffer> buffers();
+	/// Get a stock reply.
 
-	/// Last buffers have been sent and underlying data may now be discarded
+	void stock(status_type status);
+
+	// Used by the Connection to send the response
+
+	// Get next set of available buffers.
+
+	bool buffer(std::vector<boost::asio::const_buffer>& buffer);
+
+	/// Last buffers have been sent and underlying data may now be discarded.
 
 	void discard();
 
-	/// Get a stock reply.
-	static Reply Stock(status_type status);
+private:
+
+	/// Reply status
+
+	status_type m_status;
+
+	// State of incoming and outgoing streams.
+
+	reply_state m_in_state;
+	reply_state m_out_state;
+
+	// Condition sync
+
+	boost::condition_variable m_in_cond;
+	boost::mutex m_in_mutex;
+
+	// Have we already added some content?
+
+	bool m_content_added;
+
+	/// The headers to be included in the reply.
+	std::vector<Hydra::Header> m_headers;
+
+	/// The content to be sent in the reply.
+	
+	std::queue<std::string*> m_in;
+
+	bool m_q_data;
+
+	boost::condition_variable m_q_cond;
+	boost::mutex m_q_mutex;
+
+	// The content being sent in the reply.
+
+	std::vector<std::string*> m_out;
+
 };
 
 }

@@ -47,14 +47,6 @@ public:
 	
 	Reply& reply();
 
-	// Called by handler to send buffered data;
-
-	void perform_write();
-
-	// Called to terminate request
-
-	void perform_finish();
-
 	typedef boost::shared_ptr<Connection> Ptr;
 
 
@@ -62,14 +54,13 @@ private:
 
 	void read(const boost::system::error_code& e, std::size_t bytes_transferred);
 
+	// Responsible for writing the reply to the stream
 
-	// Called by handler to send buffered data.
+	void write();
 
-	void write(const boost::system::error_code& e);
+	// Handles async writes.
 
-	// Called by connection to send remaining data.
-
-	void finish(const boost::system::error_code& e);
+	void perform_write(const boost::system::error_code& e);
 
 	/// Socket for the connection.
 	boost::asio::ip::tcp::socket m_socket;

@@ -70,7 +70,7 @@ bool Hydra::Apache2::Engine::ready(){
 void Hydra::Apache2::Engine::request(Hydra::Connection::Ptr con){
 
 	if(!ready()){
-		con->reply() = Reply::Stock(Reply::service_unavailable);
+		con->reply().stock(Reply::service_unavailable);
 		return;
 	} 
 
