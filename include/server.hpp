@@ -37,7 +37,8 @@ public:
 
 	Host* host(std::string host);
 	
-	void run();
+	void run_client();
+	void run_server();
 
 	unsigned int go();
 
@@ -51,7 +52,7 @@ public:
 
 	// Hosts need this to spawn proxy connections
 
-	boost::asio::io_service& io_service() const;
+	boost::asio::io_service& io_service(bool client) const;
 
 private:
 
@@ -72,7 +73,8 @@ private:
 	Hydra::Config m_config;
 
 	/// The pool of io_service objects used to perform asynchronous operations.
-	Hydra::io_service_pool_ptr m_io_service_pool;
+	Hydra::io_service_pool_ptr m_io_service_server_pool;
+	Hydra::io_service_pool_ptr m_io_service_client_pool;
 
 	/// Acceptor used to listen for incoming connections.
 	boost::asio::ip::tcp::acceptor* m_acceptor;

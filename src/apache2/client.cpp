@@ -39,7 +39,7 @@ Hydra::Apache2::Connection::Ptr Hydra::Apache2::Client::connection(){
 	// For now however, we will create a new one.
 
 	Hydra::Apache2::Connection::Ptr con = Hydra::Apache2::Connection::Ptr(
-		new Hydra::Apache2::Connection(m_engine.server().io_service(), m_engine, *this));
+		new Hydra::Apache2::Connection(m_engine.server().io_service(true), m_engine, *this));
 
 	con->init();
 

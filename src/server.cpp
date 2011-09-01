@@ -35,8 +35,12 @@ Hydra::Server::~Server(){
 
 }
 
-boost::asio::io_service& Hydra::Server::io_service() const {
-	return m_io_service_pool->get_io_service();
+boost::asio::io_service& Hydra::Server::io_service(bool client) const {
+	if(client){
+		return m_io_service_client_pool->get_io_service();
+	} else {
+		return m_io_service_server_pool->get_io_service();
+	}
 }
 
 bool Hydra::Server::setup(){
@@ -78,15 +82,16 @@ bool Hydra::Server::setup(){
 
 		size_t threads = boost::lexical_cast<size_t>(m_config.get("global", "threads"));
 
-		m_io_service_pool = Hydra::io_service_pool_ptr(new io_service_pool(threads));
+		m_io_service_client_pool = Hydra::io_service_pool_ptr(new io_service_pool(threads));
+		m_io_service_server_pool = Hydra::io_service_pool_ptr(new io_service_pool(threads));
 
 		m_new_connection = Hydra::Connection::Ptr(new Connection(
-					io_service(), 
+					io_service(false), 
 					m_request_handler));
 
 		// Connection Acceptor
 
-		m_acceptor = new boost::asio::ip::tcp::acceptor(io_service());
+		m_acceptor = new boost::asio::ip::tcp::acceptor(io_service(false));
 	
 		boost::asio::ip::tcp::resolver resolver(m_acceptor->get_io_service());
 		boost::asio::ip::tcp::resolver::query query(address, port);
@@ -118,10 +123,12 @@ bool Hydra::Server::setup(){
 
 }
 
-void Hydra::Server::run(){
-	
-	m_io_service_pool->run();
+void Hydra::Server::run_client(){
+	m_io_service_client_pool->run();
+}
 
+void Hydra::Server::run_server(){
+	m_io_service_server_pool->run();
 }
 
 bool Hydra::Server::setup_hosts(){
@@ -151,7 +158,8 @@ bool Hydra::Server::setup_hosts(){
 
 void Hydra::Server::stop(){
 
-	m_io_service_pool->stop();
+	m_io_service_server_pool->stop();
+	m_io_service_client_pool->stop();
 
 }
 
@@ -176,7 +184,8 @@ unsigned int Hydra::Server::go(){
 		pthread_sigmask(SIG_BLOCK, &new_mask, &m_old_mask);
 
 		// Run server in background thread.
-		boost::thread t(boost::bind(&Hydra::Server::run, this));
+		boost::thread t(boost::bind(&Hydra::Server::run_client, this));
+		boost::thread u(boost::bind(&Hydra::Server::run_server, this));
 
 		// Restore previous signals.
 		pthread_sigmask(SIG_SETMASK, &m_old_mask, 0);
@@ -194,6 +203,7 @@ unsigned int Hydra::Server::go(){
 		// Stop the server.
 		stop();
 		t.join();
+		u.join();
 
 	} catch (std::exception& e) {
 
@@ -222,7 +232,7 @@ void Hydra::Server::handle_accept(const boost::system::error_code& e)
 	if (!e){
 		m_new_connection->start();
 		m_new_connection.reset(new Connection(
-			io_service(), 
+			io_service(false), 
 			m_request_handler));
 		m_acceptor->async_accept(
 			m_new_connection->socket(),
