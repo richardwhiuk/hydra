@@ -33,27 +33,27 @@ const Hydra::Server& Hydra::Apache2::Engine::server(){
 	return m_hydra;
 }
 
-const std::string Hydra::Apache2::Engine::name(){
+const std::string& Hydra::Apache2::Engine::name(){
 	return m_details.name();
 }
 
-const std::vector<std::string> Hydra::Apache2::Engine::user(){
+const std::vector<std::string>& Hydra::Apache2::Engine::user(){
 	return m_details["user"];
 }
 
-const std::vector<std::string> Hydra::Apache2::Engine::group(){
+const std::vector<std::string>& Hydra::Apache2::Engine::group(){
 	return m_details["group"];
 }
 
-const std::vector<std::string> Hydra::Apache2::Engine::config(){
+const std::vector<std::string>& Hydra::Apache2::Engine::config(){
 	return m_details["config"];
 }
 
-const std::vector<std::string> Hydra::Apache2::Engine::address(){
+const std::vector<std::string>& Hydra::Apache2::Engine::address(){
 	return m_details["address"];
 }
 
-const std::vector<std::string> Hydra::Apache2::Engine::port(){
+const std::vector<std::string>& Hydra::Apache2::Engine::port(){
 	return m_details["port"];
 }
 

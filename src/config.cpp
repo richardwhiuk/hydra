@@ -24,7 +24,7 @@ Hydra::Config::Section::~Section(){
 
 }
 
-std::string Hydra::Config::Section::name(){
+const std::string& Hydra::Config::Section::name(){
 	return m_name;
 }
 

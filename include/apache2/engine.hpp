@@ -39,15 +39,15 @@ public:
 
 // Configuration
 
-	const std::string name();			// Name in hydra.conf
+	const std::string& name();			// Name in hydra.conf
 	
-	const std::vector<std::string> config();	// Apache2 Conf File
+	const std::vector<std::string>& config();	// Apache2 Conf File
 
-	const std::vector<std::string> user();		// Runas:
-	const std::vector<std::string> group();
+	const std::vector<std::string>& user();		// Runas:
+	const std::vector<std::string>& group();
 
-	const std::vector<std::string> address();	// Bind:
-	const std::vector<std::string> port();
+	const std::vector<std::string>& address();	// Bind:
+	const std::vector<std::string>& port();
 
 
 private:

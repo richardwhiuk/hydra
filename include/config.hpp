@@ -26,7 +26,7 @@ public:
 	public:
 		Section(std::string);
 		~Section();
-		std::string name();
+		const std::string& name();
 
 	private:
 
