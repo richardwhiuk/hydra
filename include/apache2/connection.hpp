@@ -37,6 +37,8 @@ public:
 
 private:
 
+	void perform_request();
+
 	void handle_read_content(const boost::system::error_code& err);
 	void handle_read_headers(const boost::system::error_code& err);
 	void handle_read_status_line(const boost::system::error_code& err);
@@ -49,6 +51,10 @@ private:
 	boost::asio::streambuf m_request;
 	boost::asio::streambuf m_response;
 	
+	bool m_req_data;
+	boost::condition_variable m_req_cond;
+	boost::mutex m_req_mutex;
+
 	Apache2::Engine& m_engine;
 	Apache2::Client& m_client;
 	Hydra::Connection::Ptr m_connection;		// User -> Hydra connection

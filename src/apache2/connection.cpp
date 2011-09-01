@@ -19,7 +19,7 @@
 #include <apache2/connection.hpp>
 #include <apache2/client.hpp>
 
-Hydra::Apache2::Connection::Connection(boost::asio::io_service& io_service, Apache2::Engine& engine, Apache2::Client& client) : m_resolver(io_service), m_socket(io_service), m_engine(engine), m_client(client){
+Hydra::Apache2::Connection::Connection(boost::asio::io_service& io_service, Apache2::Engine& engine, Apache2::Client& client) : m_resolver(io_service), m_socket(io_service), m_engine(engine), m_client(client), m_req_data(false){
 
 	// Start an asynchronous resolve to translate the server and service names
 	// into a list of endpoints.
@@ -43,7 +43,18 @@ void Hydra::Apache2::Connection::run(Hydra::Connection::Ptr con){
 		}
 		
 	}
+
 	req_stream << "\r\n";
+
+	// Notify that the request data is available.
+
+	{
+		boost::lock_guard<boost::mutex> req_lock(m_req_mutex);
+		m_req_data = true;
+	}
+	
+	m_req_cond.notify_one();
+
 }
 
 Hydra::Apache2::Connection::~Connection(){
@@ -56,8 +67,8 @@ void Hydra::Apache2::Connection::handle_resolve(const boost::system::error_code&
 		// will be tried until we successfully establish a connection.
 		boost::asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
 		m_socket.async_connect(endpoint,
-				boost::bind(&Hydra::Apache2::Connection::handle_connect, this,
-					boost::asio::placeholders::error, ++endpoint_iterator));
+			boost::bind(&Hydra::Apache2::Connection::handle_connect, this,
+				boost::asio::placeholders::error, ++endpoint_iterator));
 	} else {
 		std::cerr << "Hydra: Apache2: " << err.message() << std::endl;
 	}
@@ -65,10 +76,11 @@ void Hydra::Apache2::Connection::handle_resolve(const boost::system::error_code&
 
 void Hydra::Apache2::Connection::handle_connect(const boost::system::error_code& err, boost::asio::ip::tcp::resolver::iterator endpoint_iterator){ 
 	if (!err){
-		// The connection was successful. Send the request.
-		boost::asio::async_write(m_socket, m_request,
-				boost::bind(&Hydra::Apache2::Connection::handle_write_request, this,
-					boost::asio::placeholders::error));
+
+		// Need to block until we have the request.
+
+		perform_request();
+
 	} else if (endpoint_iterator != boost::asio::ip::tcp::resolver::iterator()){
 		// The connection failed. Try the next endpoint in the list.
 		m_socket.close();
@@ -79,6 +91,22 @@ void Hydra::Apache2::Connection::handle_connect(const boost::system::error_code&
 	} else {
 		std::cerr << "Hydra: Apache2: " << err.message() << "\n";
 	}
+}
+
+void Hydra::Apache2::Connection::perform_request(){
+
+	boost::unique_lock<boost::mutex> req_lock(m_req_mutex);
+
+	while(!m_req_data){
+		m_req_cond.wait(req_lock);
+	}
+
+
+	// The connection was successful and we have the data. Perform the request
+	boost::asio::async_write(m_socket, m_request,
+			boost::bind(&Hydra::Apache2::Connection::handle_write_request, this,
+				boost::asio::placeholders::error));
+	
 }
 
 void Hydra::Apache2::Connection::handle_write_request(const boost::system::error_code& err){
