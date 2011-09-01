@@ -34,16 +34,16 @@ Hydra::Apache2::Connection::Connection(boost::asio::io_service& io_service, Apac
 void Hydra::Apache2::Connection::run(Hydra::Connection::Ptr con){
 	m_connection = con;
 
-	std::ostream m_requeststream(&m_request);
+	std::ostream req_stream(&m_request);
 	Request& req = con->request();
-	m_requeststream << req.method << " " << req.uri << " HTTP/1.0" << "\r\n";
+	req_stream << req.method << " " << req.uri << " HTTP/1.0" << "\r\n";
 	for(std::vector<Header>::const_iterator it = req.headers.begin(); it != req.headers.end(); ++it){
 		if(it->name != "Connection"){
-			m_requeststream << it->name << ": " << it->value << "\r\n";
+			req_stream << it->name << ": " << it->value << "\r\n";
 		}
 		
 	}
-	m_requeststream << "\r\n";
+	req_stream << "\r\n";
 }
 
 /*Hydra::Apache2::Connection::Connection(boost::asio::io_service& io_service, Hydra::Connection& con, Apache2::Client& client) : m_resolver(io_service), m_socket(io_service), m_connection(con), m_client(client){
