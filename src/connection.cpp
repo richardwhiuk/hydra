@@ -48,7 +48,7 @@ void Connection::read(const boost::system::error_code& e, std::size_t bytes_tran
 
 		if (result){	
 	
-			m_request_handler.handle_request(*this);
+			m_request_handler.handle_request(shared_from_this());
 
 			perform_finish();
 		} else if (!result) {

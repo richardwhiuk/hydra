@@ -33,7 +33,7 @@ public:
 
 	bool ready();
 
-	virtual void request(Hydra::Connection&);
+	virtual void request(Hydra::Connection::Ptr);
 
 	const Hydra::Server& server();
 

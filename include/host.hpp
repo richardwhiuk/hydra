@@ -35,7 +35,7 @@ public:
 
 	std::vector<std::string> alias();
 
-	void request(Connection&);
+	void request(Connection::Ptr);
 
 	~Host();
 

@@ -55,6 +55,7 @@ set(HEADER_FILES
 	include/engine.hpp
 	include/header.hpp
 	include/host.hpp
+	include/hydra.hpp
 	include/io_service_pool.hpp
 	include/reply.hpp
 	include/request.hpp

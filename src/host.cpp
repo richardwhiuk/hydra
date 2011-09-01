@@ -49,7 +49,7 @@ std::vector<std::string> Hydra::Host::alias(){
 	}	
 }
 
-void Hydra::Host::request(Hydra::Connection& con){ 
+void Hydra::Host::request(Hydra::Connection::Ptr con){ 
 
 	if(m_engine == NULL){
 		m_engine_mux.lock();

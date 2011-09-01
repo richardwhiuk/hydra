@@ -34,7 +34,7 @@ public:
 
 	}
 
-	virtual void request(Hydra::Connection&) = 0;
+	virtual void request(Hydra::Connection::Ptr) = 0;
 
 protected:
 

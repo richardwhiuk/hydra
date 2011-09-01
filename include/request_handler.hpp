@@ -14,10 +14,9 @@
 
 #include <string>
 #include <boost/noncopyable.hpp>
+#include <connection.hpp>
 
 namespace Hydra {
-
-class Connection;
 
 class Server;
 
@@ -29,7 +28,7 @@ public:
 	Request_Handler(Server* server);
 
 	/// Handle a request and produce a reply.
-	void handle_request(Hydra::Connection& con);
+	void handle_request(Hydra::Connection::Ptr con);
 
 private:
 

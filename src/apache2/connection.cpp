@@ -18,12 +18,12 @@
 #include <boost/bind.hpp>
 #include <apache2/connection.hpp>
 
-Hydra::Apache2::Connection::Connection(boost::asio::io_service& io_service, Hydra::Connection& con, Apache2::Client& client) : m_resolver(io_service), m_socket(io_service), m_connection(con), m_client(client){
+Hydra::Apache2::Connection::Connection(boost::asio::io_service& io_service, Hydra::Connection::Ptr con, Apache2::Client& client) : m_resolver(io_service), m_socket(io_service), m_connection(con), m_client(client){
 	// Form the request. We specify the "Connection: close" header so that the
 	// server will close the socket after transmitting the response. This will
 	// allow us to treat all data up until the EOF as the content.
 	std::ostream m_requeststream(&m_request);
-	Request& req = con.request();
+	Request& req = con->request();
 	m_requeststream << req.method << " " << req.uri << " HTTP/1.0" << "\r\n";
 	for(std::vector<Header>::const_iterator it = req.headers.begin(); it != req.headers.end(); ++it){
 		if(it->name != "Connection"){
@@ -104,7 +104,7 @@ void Hydra::Apache2::Connection::handle_read_status_line(const boost::system::er
 			return;
 		}
 
-		m_connection.reply().status = Hydra::Reply::status_type(status_code);
+		m_connection->reply().status = Hydra::Reply::status_type(status_code);
 
 		// Read the response headers, which are terminated by a blank line.
 		boost::asio::async_read_until(m_socket, m_response, "\r\n\r\n",
@@ -128,7 +128,7 @@ void Hydra::Apache2::Connection::handle_read_headers(const boost::system::error_
 			nh.name = hstr.substr(0, a);
 			nh.value = hstr.substr(a+2,hstr.length() - a - 2); 
 			if(nh.name != "Connection" && nh.name != "Keep-Alive"){
-				m_connection.reply().headers.push_back(nh);
+				m_connection->reply().headers.push_back(nh);
 			}
 		}
 
@@ -136,10 +136,10 @@ void Hydra::Apache2::Connection::handle_read_headers(const boost::system::error_
 		if (m_response.size() > 0){
 			std::stringstream ss;
 			std::copy(std::istreambuf_iterator<char>(response_stream), std::istreambuf_iterator<char>(), std::ostreambuf_iterator<char>(ss));
-			m_connection.reply().content(ss.str());
+			m_connection->reply().content(ss.str());
 		}
 
-		m_connection.perform_write();
+		m_connection->perform_write();
 
 		std::cout << "Async First Write Done. Resuming Read" << std::endl;
 
@@ -165,10 +165,10 @@ void Hydra::Apache2::Connection::handle_read_content(const boost::system::error_
 			std::istream response_stream(&m_response);
 			std::stringstream ss;
 			std::copy(std::istreambuf_iterator<char>(response_stream), std::istreambuf_iterator<char>(), std::ostreambuf_iterator<char>(ss));
-			m_connection.reply().content(ss.str());
+			m_connection->reply().content(ss.str());
 		}
 
-//		m_connection.perform_write();
+//		m_connection->perform_write();
 
 		std::cout << "Async Write Done. Resuming Read" << std::endl;
 

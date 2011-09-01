@@ -27,7 +27,7 @@ bool Hydra::Apache2::Client::ready(){
 	return true;
 }
 
-void Hydra::Apache2::Client::run(Hydra::Connection& ccon){
+void Hydra::Apache2::Client::run(Hydra::Connection::Ptr ccon){
 	
 	boost::asio::io_service ios;
 

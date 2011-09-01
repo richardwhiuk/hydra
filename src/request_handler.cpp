@@ -28,22 +28,22 @@ bool isHost(const Hydra::Header h){
 	return (h.name == "Host");
 }
 
-void Hydra::Request_Handler::handle_request(Hydra::Connection& con){
+void Hydra::Request_Handler::handle_request(Hydra::Connection::Ptr con){
 
 	// Hydra Functionality.
 
-	std::vector<Header>::const_iterator it = std::find_if(con.request().headers.begin(), con.request().headers.end(), isHost);
+	std::vector<Header>::const_iterator it = std::find_if(con->request().headers.begin(), con->request().headers.end(), isHost);
 
-	if(it == con.request().headers.end()){
+	if(it == con->request().headers.end()){
 		std::cerr << "Hydra: No Host Header" << std::endl;
-		con.reply() = Reply::Stock(Reply::service_unavailable);
+		con->reply() = Reply::Stock(Reply::service_unavailable);
 		return;
 	}
 
 	Host* host = m_server->host(it->value);
 
 	if(host == NULL){
-		con.reply() = Reply::Stock(Reply::service_unavailable);
+		con->reply() = Reply::Stock(Reply::service_unavailable);
 		return;
 	} else {
 		host->request(con);

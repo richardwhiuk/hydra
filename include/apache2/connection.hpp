@@ -24,7 +24,7 @@ class Connection {
 
 public:
 
-	Connection(boost::asio::io_service&, Hydra::Connection&, Apache2::Client& client);
+	Connection(boost::asio::io_service&, Hydra::Connection::Ptr, Apache2::Client& client);
 
 	~Connection();
 
@@ -43,7 +43,7 @@ private:
 	boost::asio::streambuf m_response;
 		
 	Apache2::Client& m_client;
-	Hydra::Connection& m_connection;		// User -> Hydra connection
+	Hydra::Connection::Ptr m_connection;		// User -> Hydra connection
 							// this = Hydra->Apache2 connection
 
 };

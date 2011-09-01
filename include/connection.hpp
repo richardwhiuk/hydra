@@ -19,10 +19,10 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
-#include "reply.hpp"
-#include "request.hpp"
-#include "request_handler.hpp"
-#include "request_parser.hpp"
+#include <hydra.hpp>
+#include <reply.hpp>
+#include <request.hpp>
+#include <request_parser.hpp>
 
 namespace Hydra {
 

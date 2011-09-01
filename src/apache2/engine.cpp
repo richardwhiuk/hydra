@@ -8,7 +8,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include "apache2/engine.hpp"
+#include <apache2/engine.hpp>
+#include <apache2/connection.hpp>
 
 #include "errno.h"
 #include <iostream>
@@ -65,10 +66,10 @@ bool Hydra::Apache2::Engine::ready(){
 	return true;
 }
 
-void Hydra::Apache2::Engine::request(Hydra::Connection& con){
+void Hydra::Apache2::Engine::request(Hydra::Connection::Ptr con){
 
 	if(!ready()){
-		con.reply() = Reply::Stock(Reply::service_unavailable);
+		con->reply() = Reply::Stock(Reply::service_unavailable);
 		return;
 	} 
 
