@@ -74,7 +74,7 @@ void Hydra::Apache2::Connection::handle_resolve(const boost::system::error_code&
 			boost::bind(&Hydra::Apache2::Connection::handle_connect, this,
 				boost::asio::placeholders::error, ++endpoint_iterator));
 	} else {
-		std::cerr << "Hydra: Apache2: " << err.message() << std::endl;
+		std::cerr << "Hydra: Apache2: Resolve: " << err.message() << std::endl;
 	}
 }
 
@@ -93,7 +93,7 @@ void Hydra::Apache2::Connection::handle_connect(const boost::system::error_code&
 				boost::bind(&Hydra::Apache2::Connection::handle_connect, this,
 					boost::asio::placeholders::error, ++endpoint_iterator));
 	} else {
-		std::cerr << "Hydra: Apache2: " << err.message() << "\n";
+		std::cerr << "Hydra: Apache2: Connect: " << err.message() << "\n";
 	}
 }
 
@@ -120,7 +120,7 @@ void Hydra::Apache2::Connection::handle_write_request(const boost::system::error
 				boost::bind(&Hydra::Apache2::Connection::handle_read_status_line, this,
 					boost::asio::placeholders::error));
 	} else {
-		std::cerr << "Hydra: Apache2: " << err.message() << "\n";
+		std::cerr << "Hydra: Apache2: Write: " << err.message() << "\n";
 	}
 }
 
@@ -147,7 +147,7 @@ void Hydra::Apache2::Connection::handle_read_status_line(const boost::system::er
 				boost::bind(&Hydra::Apache2::Connection::handle_read_headers, this,
 					boost::asio::placeholders::error));
 	} else {
-		std::cerr << "Hydra: Apache2: Error: " << err << std::endl;
+		std::cerr << "Hydra: Apache2: Read Status Error: " << err << std::endl;
 	}
 }
 
@@ -184,7 +184,7 @@ void Hydra::Apache2::Connection::handle_read_headers(const boost::system::error_
 					boost::asio::placeholders::error));
 
 	} else {
-		std::cerr << "Hydra: Apache2: Error: " << err << "\n";
+		std::cerr << "Hydra: Apache2: Read Header Error: " << err << "\n";
 	}
 }
 
@@ -207,7 +207,7 @@ void Hydra::Apache2::Connection::handle_read_content(const boost::system::error_
 					boost::asio::placeholders::error));
 
 	} else if (err != boost::asio::error::eof){
-		std::cerr << "Hydra: Apache2: Error: " << err << "\n";
+		std::cerr << "Hydra: Apache2: Read Content Error: " << err << "\n";
 	} else {
 		// Done
 
