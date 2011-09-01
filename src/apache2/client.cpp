@@ -18,22 +18,30 @@
 #include <boost/bind.hpp>
 #include <apache2/connection.hpp>
 #include <apache2/client.hpp>
+#include <apache2/engine.hpp>
 
 Hydra::Apache2::Client::Client(Hydra::Apache2::Engine& engine) : m_engine(engine){
 
 }
 
 bool Hydra::Apache2::Client::ready(){
+	if(m_engine.port().size() == 0)
+		return false;
+	if(m_engine.address().size() == 0)
+		return false;
+
 	return true;
 }
 
-void Hydra::Apache2::Client::run(Hydra::Connection::Ptr ccon){
-	
-	boost::asio::io_service ios;
+Hydra::Apache2::Connection::Ptr Hydra::Apache2::Client::connection(){
+	// In the future we should reuse old connections. 
 
-	Apache2::Connection con(ios, ccon, *this);
+	// For now however, we will create a new one.
 
-	ios.run();
+	Hydra::Apache2::Connection::Ptr con = Hydra::Apache2::Connection::Ptr(
+		new Hydra::Apache2::Connection(m_engine.server().io_service(), m_engine, *this));
+
+	return con;
 
 }
 
@@ -42,10 +50,10 @@ Hydra::Apache2::Client::~Client(){
 }
 
 const std::string& Hydra::Apache2::Client::port(){
-	return m_port;
+	return m_engine.port().front();
 }
 
 const std::string& Hydra::Apache2::Client::server(){
-	return m_server;
+	return m_engine.address().front();
 }
 

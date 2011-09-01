@@ -49,19 +49,20 @@ const std::vector<std::string> Hydra::Apache2::Engine::config(){
 	return m_details["config"];
 }
 
+const std::vector<std::string> Hydra::Apache2::Engine::address(){
+	return m_details["address"];
+}
+
+const std::vector<std::string> Hydra::Apache2::Engine::port(){
+	return m_details["port"];
+}
+
 bool Hydra::Apache2::Engine::ready(){
 	if(!m_server.ready())
 		return false;
 
 	if(!m_client.ready())
 		return false;
-
-	if(m_details["address"].size() == 0)
-		return false;
-
-	if(m_details["port"].size() == 0)
-		return false;
-
 
 	return true;
 }
@@ -73,7 +74,9 @@ void Hydra::Apache2::Engine::request(Hydra::Connection::Ptr con){
 		return;
 	} 
 
-	m_client.run(con);
+	Hydra::Apache2::Connection::Ptr apcon = m_client.connection();
+
+	apcon->run(con);
 
 }
 

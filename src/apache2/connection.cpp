@@ -17,8 +17,36 @@
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <apache2/connection.hpp>
+#include <apache2/client.hpp>
 
-Hydra::Apache2::Connection::Connection(boost::asio::io_service& io_service, Hydra::Connection::Ptr con, Apache2::Client& client) : m_resolver(io_service), m_socket(io_service), m_connection(con), m_client(client){
+Hydra::Apache2::Connection::Connection(boost::asio::io_service& io_service, Apache2::Engine& engine, Apache2::Client& client) : m_resolver(io_service), m_socket(io_service), m_engine(engine), m_client(client){
+
+	// Start an asynchronous resolve to translate the server and service names
+	// into a list of endpoints.
+	boost::asio::ip::tcp::resolver::query query(m_client.server(), m_client.port());
+	m_resolver.async_resolve(query,
+		boost::bind(&Hydra::Apache2::Connection::handle_resolve, shared_from_this(),
+			boost::asio::placeholders::error,
+			boost::asio::placeholders::iterator));
+
+}
+
+void Hydra::Apache2::Connection::run(Hydra::Connection::Ptr con){
+	m_connection = con;
+
+	std::ostream m_requeststream(&m_request);
+	Request& req = con->request();
+	m_requeststream << req.method << " " << req.uri << " HTTP/1.0" << "\r\n";
+	for(std::vector<Header>::const_iterator it = req.headers.begin(); it != req.headers.end(); ++it){
+		if(it->name != "Connection"){
+			m_requeststream << it->name << ": " << it->value << "\r\n";
+		}
+		
+	}
+	m_requeststream << "\r\n";
+}
+
+/*Hydra::Apache2::Connection::Connection(boost::asio::io_service& io_service, Hydra::Connection& con, Apache2::Client& client) : m_resolver(io_service), m_socket(io_service), m_connection(con), m_client(client){
 	// Form the request. We specify the "Connection: close" header so that the
 	// server will close the socket after transmitting the response. This will
 	// allow us to treat all data up until the EOF as the content.
@@ -33,14 +61,7 @@ Hydra::Apache2::Connection::Connection(boost::asio::io_service& io_service, Hydr
 	}
 	m_requeststream << "\r\n";
 
-	// Start an asynchronous resolve to translate the server and service names
-	// into a list of endpoints.
-	boost::asio::ip::tcp::resolver::query query(m_client.server(), m_client.port());
-	m_resolver.async_resolve(query,
-		boost::bind(&Hydra::Apache2::Connection::handle_resolve, this,
-			boost::asio::placeholders::error,
-			boost::asio::placeholders::iterator));
-}
+}*/
 
 Hydra::Apache2::Connection::~Connection(){
 

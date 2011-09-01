@@ -14,7 +14,7 @@
 #include <sys/types.h>
 #include <boost/asio.hpp>
 #include <apache2.hpp>
-#include <connection.hpp>
+#include <apache2/connection.hpp>
 
 namespace Hydra {
 
@@ -31,7 +31,7 @@ public:
 
 	bool ready();
 
-	void run(Hydra::Connection::Ptr);
+	Hydra::Apache2::Connection::Ptr connection();
 
 	~Client();
 

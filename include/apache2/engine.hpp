@@ -46,6 +46,8 @@ public:
 	const std::vector<std::string> user();		// Runas:
 	const std::vector<std::string> group();
 
+	const std::vector<std::string> address();	// Bind:
+	const std::vector<std::string> port();
 
 
 private:

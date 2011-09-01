@@ -9,9 +9,12 @@
 //
 
 #include <connection.hpp>
-#include <apache2/client.hpp>
+#include <apache2.hpp>
 #include <sys/types.h>
 #include <boost/asio.hpp>
+#include <boost/noncopyable.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 #ifndef HYDRA_FILE_APACHE2_CONNECTION_HPP
 #define HYDRA_FILE_APACHE2_CONNECTION_HPP
@@ -20,13 +23,17 @@ namespace Hydra {
 
 namespace Apache2 {
 
-class Connection {
+class Connection : public boost::enable_shared_from_this<Connection>, private boost::noncopyable {
 
 public:
 
-	Connection(boost::asio::io_service&, Hydra::Connection::Ptr, Apache2::Client& client);
+	Connection(boost::asio::io_service&, Apache2::Engine& engine, Apache2::Client& client);
+
+	void run(Hydra::Connection::Ptr);
 
 	~Connection();
+
+	typedef boost::shared_ptr<Hydra::Apache2::Connection> Ptr;
 
 private:
 
@@ -41,7 +48,8 @@ private:
 	boost::asio::ip::tcp::socket m_socket;
 	boost::asio::streambuf m_request;
 	boost::asio::streambuf m_response;
-		
+	
+	Apache2::Engine& m_engine;
 	Apache2::Client& m_client;
 	Hydra::Connection::Ptr m_connection;		// User -> Hydra connection
 							// this = Hydra->Apache2 connection
