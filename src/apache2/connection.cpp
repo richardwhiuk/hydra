@@ -21,6 +21,10 @@
 
 Hydra::Apache2::Connection::Connection(boost::asio::io_service& io_service, Apache2::Engine& engine, Apache2::Client& client) : m_resolver(io_service), m_socket(io_service), m_engine(engine), m_client(client), m_req_data(false){
 
+}
+
+void Hydra::Apache2::Connection::init(){
+
 	// Start an asynchronous resolve to translate the server and service names
 	// into a list of endpoints.
 	boost::asio::ip::tcp::resolver::query query(m_client.server(), m_client.port());

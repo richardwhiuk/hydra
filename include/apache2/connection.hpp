@@ -29,6 +29,8 @@ public:
 
 	Connection(boost::asio::io_service&, Apache2::Engine& engine, Apache2::Client& client);
 
+	void init();		// Can't use shared pointers in constructor.
+
 	void run(Hydra::Connection::Ptr);
 
 	~Connection();
