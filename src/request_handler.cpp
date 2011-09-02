@@ -35,10 +35,21 @@ void Hydra::Request_Handler::handle_request(Hydra::Connection::Ptr con){
 	std::vector<Header>::const_iterator it = std::find_if(con->request().headers.begin(), con->request().headers.end(), isHost);
 
 	if(it == con->request().headers.end()){
+		std::cout << "[" << con->address() 
+			<< "] [NO_HOST] [" << con->request().method 
+			<< "] [" << con->request().uri 
+			<< "]" << std::endl;
+
 		std::cerr << "Hydra: No Host Header" << std::endl;
 		con->reply().stock(Reply::service_unavailable);
 		return;
 	}
+
+	std::cout << "[" << con->address() 
+		<< "] [" << it->value 
+		<< "] [" << con->request().method 
+		<< "] [" << con->request().uri
+		<< "]" << std::endl;
 
 	Host* host = m_server->host(it->value);
 
