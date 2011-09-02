@@ -33,6 +33,10 @@ boost::asio::ip::tcp::socket& Connection::socket(){
 	return m_socket;
 }
 
+std::string Connection::address(){
+	return m_socket.remote_endpoint().address().to_string();
+}
+
 void Connection::start(){
 	m_socket.async_read_some(boost::asio::buffer(m_buffer),
 			boost::bind(&Connection::read, shared_from_this(),

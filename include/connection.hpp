@@ -43,6 +43,9 @@ public:
 	/// Start the first asynchronous operation for the connection.
 	void start();
 
+	/// Address (as string)
+	std::string address();
+
 	Request& request();
 	
 	Reply& reply();
