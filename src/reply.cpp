@@ -18,7 +18,7 @@
 #include <exception>
 #include <iostream>
 
-Hydra::Reply::Reply() : m_in_state(Reply::state_none), m_out_state(Reply::state_none), m_content_added(false), m_q_data(false){
+Hydra::Reply::Reply() : m_in_state(Reply::in_none), m_out_state(Reply::out_none), m_in_bind_called(false){
 
 }
 
@@ -44,7 +44,7 @@ void Hydra::Reply::status(status_type status){
 	m_status = status;
 	{
 		boost::lock_guard<boost::mutex> in_lock(m_in_mutex);
-		m_in_state = state_status;
+		m_in_state = in_status;
 	}
 	m_in_cond.notify_one();
 }
@@ -56,38 +56,46 @@ void Hydra::Reply::header(Hydra::Header& header){
 void Hydra::Reply::headers_complete(){
 	{
 		boost::lock_guard<boost::mutex> in_lock(m_in_mutex);
-		m_in_state = state_header;
+		m_in_state = in_header;
 	}
 	m_in_cond.notify_one();
 	
 }
 
+void Hydra::Reply::content_bind(boost::function<void()> bind){
+	m_in_bind = bind;
+}
+
 void Hydra::Reply::content(std::string content){
+
 	std::string* str = new std::string(content);
 
-	if(m_content_added){
-		{
-			boost::lock_guard<boost::mutex> in_lock(m_in_mutex);
-			m_in_state = state_partial;
-		}
-		m_content_added = true;
-	}
-	
-	m_in_cond.notify_one();
-
 	{
-		boost::lock_guard<boost::mutex> q_lock(m_q_mutex);
-		m_q_data = true;
+		boost::lock_guard<boost::mutex> in_lock(m_in_mutex);
+		m_in_state = in_content_data;
 		m_in.push(str);
 	}
-	m_q_cond.notify_one();
+
+	m_in_cond.notify_one();
+}
+
+void Hydra::Reply::content(){
+
+	{
+		boost::lock_guard<boost::mutex> in_lock(m_in_mutex);
+		m_in_state = in_content_none;
+	}
+
+	m_in_cond.notify_one();
+
 }
 
 void Hydra::Reply::finish(){
 	
 	{
 		boost::lock_guard<boost::mutex> in_lock(m_in_mutex);
-		m_in_state = state_done;
+		m_in_state = in_done;
+		m_in_bind.clear();
 	}
 
 	m_in_cond.notify_one();
@@ -105,50 +113,43 @@ void Hydra::Reply::stock(status_type status){
 	m_headers[0].value = boost::lexical_cast<std::string>(content->size());
 	m_headers[1].name = "Content-Type";
 	m_headers[1].value = "text/html";
-	m_content_added = true;
 
 	{
 		boost::lock_guard<boost::mutex> in_lock(m_in_mutex);
-		m_in_state = state_done;
+		m_in.push(content);
+		m_in_state = in_done;
 	}
 
 	m_in_cond.notify_one();
-
-	{
-		boost::lock_guard<boost::mutex> q_lock(m_q_mutex);
-		m_q_data = true;
-		m_in.push(content);
-	}
-
-	m_q_cond.notify_one();
-
 }
 
 // Out
 
 bool Hydra::Reply::buffer(std::vector<boost::asio::const_buffer>& buffers){
 
-	boost::unique_lock<boost::mutex> in_lock(m_in_mutex);
-
 	switch(m_out_state){
-		case state_none:
+
+		case out_none:
+		{
+			boost::unique_lock<boost::mutex> in_lock(m_in_mutex);
 
 			// Output Status
-
-			while(m_in_state <= state_none){
+			while(m_in_state <= in_none){
 				m_in_cond.wait(in_lock);
 			}
 
 			buffers.push_back(status_strings::to_buffer(m_status));	
-			m_out_state = state_status;
+			m_out_state = out_status;
 
 			return true;
-		
-		case state_status:
+		}
 
+		case out_status:
+		{
+			boost::unique_lock<boost::mutex> in_lock(m_in_mutex);
+	
 			// Output Header
-
-			while(m_in_state <= state_status){
+			while(m_in_state <= in_status){
 				m_in_cond.wait(in_lock);
 			}
 
@@ -162,50 +163,65 @@ bool Hydra::Reply::buffer(std::vector<boost::asio::const_buffer>& buffers){
 
 			buffers.push_back(boost::asio::buffer(misc_strings::crlf));
 
-			m_out_state = state_header;
+			m_out_state = out_header;
 
 			return true;
+		}
 
-		case state_header:
+		case out_header:
+		case out_content:
 
-			// Output Content
+		bool finished;
 
-			while(m_in_state <= state_partial){
+		{
+			boost::unique_lock<boost::mutex> in_lock(m_in_mutex);
+
+			while( (m_in_state != in_content_data) && (m_in_state != in_done) ){
+
+				if(m_in_state == in_content_none && m_in_bind_called == false){
+					m_in_bind();
+					m_in_bind_called = true;
+				}
+
 				m_in_cond.wait(in_lock);
-			}
-
-		case state_partial:
-
-			{
-				boost::unique_lock<boost::mutex> q_lock(m_q_mutex);
-				while(m_q_data == false){
-					m_q_cond.wait(q_lock);
-				}
-
-				std::size_t q_size = m_in.size();
-
-				for(; q_size > 0; --q_size){
-					m_out.push_back(m_in.front());
-					m_in.pop();
-				}
-				
-				m_q_data = false;
 
 			}
 
-			for(std::vector<std::string*>::iterator it = m_out.begin(); it != m_out.end(); ++it){
-				buffers.push_back(boost::asio::buffer(*(*it)));
-			}
-			
-			if(m_in_state == state_done){
-				m_out_state = state_done;
+			if(m_in_state == in_done){
+				finished = true;
 			} else {
-				m_out_state = state_partial;
+				finished = false;
+				m_in_state = in_content_none;
 			}
 
-			return true;
+			finished = (m_in_state == in_done);
 
-		case state_done:
+			std::size_t q_size = m_in.size();
+
+			for(; q_size > 0; --q_size){
+				m_out.push_back(m_in.front());
+				m_in.pop();
+			}
+
+		}
+
+		if(finished){
+			if(m_out.size() == 0){
+				return false;
+			}
+
+			m_out_state = out_done;
+		} else {
+			m_out_state = out_content;
+		}
+
+		for(std::vector<std::string*>::iterator it = m_out.begin(); it != m_out.end(); ++it){
+			buffers.push_back(boost::asio::buffer(*(*it)));
+		}
+
+		return true;
+
+		case out_done:
 
 			return false;
 

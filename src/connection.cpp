@@ -21,6 +21,10 @@ Connection::Connection(boost::asio::io_service& io_service, Request_Handler& han
 
 }
 
+Connection::~Connection(){
+
+}
+
 Request& Connection::request(){
 	return m_request;
 }

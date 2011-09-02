@@ -175,22 +175,30 @@ void Hydra::Apache2::Connection::handle_read_headers(const boost::system::error_
 			std::stringstream ss;
 			std::copy(std::istreambuf_iterator<char>(response_stream), std::istreambuf_iterator<char>(), std::ostreambuf_iterator<char>(ss));
 			m_connection->reply().content(ss.str());
+		} else {
+			m_connection->reply().content();
 		}
 
-		// Start reading remaining data until EOF.
-		boost::asio::async_read(m_socket, m_response,
-				boost::asio::transfer_at_least(1),
-				boost::bind(&Hydra::Apache2::Connection::handle_read_content, shared_from_this(),
-					boost::asio::placeholders::error));
+		m_connection->reply().content_bind(boost::bind(&Hydra::Apache2::Connection::perform_read, shared_from_this()));
 
 	} else {
 		std::cerr << "Hydra: Apache2: Read Header Error: " << err << "\n";
 	}
 }
 
-void Hydra::Apache2::Connection::handle_read_content(const boost::system::error_code& err){
+void Hydra::Apache2::Connection::perform_read(){
 
+	boost::asio::async_read(m_socket, m_response.prepare(1024),
+			boost::asio::transfer_at_least(1),
+			boost::bind(&Hydra::Apache2::Connection::handle_read_content, shared_from_this(),
+				boost::asio::placeholders::error));
+
+}
+
+void Hydra::Apache2::Connection::handle_read_content(const boost::system::error_code& err){
+	
 	if (!err){
+		m_response.commit(1024);
 
 		// Write all of the data that has been read so far.
 		if (m_response.size() > 0){
@@ -198,13 +206,9 @@ void Hydra::Apache2::Connection::handle_read_content(const boost::system::error_
 			std::stringstream ss;
 			std::copy(std::istreambuf_iterator<char>(response_stream), std::istreambuf_iterator<char>(), std::ostreambuf_iterator<char>(ss));
 			m_connection->reply().content(ss.str());
+		} else {
+			perform_read();
 		}
-
-		// Continue reading remaining data until EOF.
-		boost::asio::async_read(m_socket, m_response,
-				boost::asio::transfer_at_least(1),
-				boost::bind(&Hydra::Apache2::Connection::handle_read_content, shared_from_this(),
-					boost::asio::placeholders::error));
 
 	} else if (err != boost::asio::error::eof){
 		std::cerr << "Hydra: Apache2: Read Content Error: " << err << "\n";
@@ -212,6 +216,8 @@ void Hydra::Apache2::Connection::handle_read_content(const boost::system::error_
 		// Done
 
 		m_connection->reply().finish();
+		m_connection.reset();
+
 	}
 
 }

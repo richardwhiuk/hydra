@@ -41,6 +41,8 @@ private:
 
 	void perform_request();
 
+	void perform_read();
+
 	void handle_read_content(const boost::system::error_code& err);
 	void handle_read_headers(const boost::system::error_code& err);
 	void handle_read_status_line(const boost::system::error_code& err);
