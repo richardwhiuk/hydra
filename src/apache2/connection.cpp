@@ -162,7 +162,7 @@ void Hydra::Apache2::Connection::handle_read_headers(const boost::system::error_
 			a = hstr.find(':');		
 			Hydra::Header nh;
 			nh.name = hstr.substr(0, a);
-			nh.value = hstr.substr(a+2,hstr.length() - a - 2); 
+			nh.value = hstr.substr(a+2,hstr.length() - a - 3); 
 			if(nh.name != "Connection" && nh.name != "Keep-Alive"){
 				m_connection->reply().header(nh);
 			}
