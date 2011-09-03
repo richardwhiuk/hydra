@@ -188,7 +188,7 @@ void Hydra::Apache2::Connection::handle_read_headers(const boost::system::error_
 
 void Hydra::Apache2::Connection::perform_read(){
 
-	boost::asio::async_read(m_socket, m_response.prepare(1024),
+	boost::asio::async_read(m_socket, boost::asio::buffer(m_response_buffer),
 			boost::asio::transfer_at_least(1),
 			boost::bind(&Hydra::Apache2::Connection::handle_read_content, shared_from_this(),
 				boost::asio::placeholders::error));
@@ -202,9 +202,8 @@ void Hydra::Apache2::Connection::handle_read_content(const boost::system::error_
 
 		// Write all of the data that has been read so far.
 		if (m_response.size() > 0){
-			std::istream response_stream(&m_response);
 			std::stringstream ss;
-			std::copy(std::istreambuf_iterator<char>(response_stream), std::istreambuf_iterator<char>(), std::ostreambuf_iterator<char>(ss));
+			std::copy(m_response_buffer.begin(), m_response_buffer.end(), std::ostreambuf_iterator<char>(ss));
 			m_connection->reply().content(ss.str());
 		} else {
 			perform_read();

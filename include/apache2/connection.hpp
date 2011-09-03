@@ -52,9 +52,11 @@ private:
 	
 	boost::asio::ip::tcp::resolver m_resolver;
 	boost::asio::ip::tcp::socket m_socket;
+
 	boost::asio::streambuf m_request;
 	boost::asio::streambuf m_response;
-	
+	boost::array<char, 8192> m_response_buffer;
+       	
 	bool m_req_data;
 	boost::condition_variable m_req_cond;
 	boost::mutex m_req_mutex;
