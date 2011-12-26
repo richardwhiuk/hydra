@@ -1,10 +1,19 @@
 Hydra
+=====
 
 Distributed under the Boost Software License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 This daemon is designed to multiplex between different HTTP servers distinguished by the Host: header.
 
-Building Hydra:
+Usage
+-----
+
+hydra [config file]
+
+With no configuration file it expects it to be in /etc/hydra.conf
+
+Building
+--------
 
 cd build
 cmake ..
@@ -12,5 +21,18 @@ make
 make install
 
 At this point, there is a copy of the hydra daemon - bin/hydra.
+
+Developing
+----------
+
+Suggested build environment is Debian/Ubuntu Linux. 
+
+For Debian:
+
+libboost-dev
+libboost-thread-dev
+libboost-system-dev
+cmake
+git
 
 
