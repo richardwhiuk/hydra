@@ -41,6 +41,8 @@ private:
 
 	void perform_request();
 
+	void perform_read();
+
 	void handle_read_content(const boost::system::error_code& err);
 	void handle_read_headers(const boost::system::error_code& err);
 	void handle_read_status_line(const boost::system::error_code& err);
@@ -50,9 +52,11 @@ private:
 	
 	boost::asio::ip::tcp::resolver m_resolver;
 	boost::asio::ip::tcp::socket m_socket;
+
 	boost::asio::streambuf m_request;
 	boost::asio::streambuf m_response;
-	
+	boost::array<char, 8192> m_response_buffer;
+       	
 	bool m_req_data;
 	boost::condition_variable m_req_cond;
 	boost::mutex m_req_mutex;

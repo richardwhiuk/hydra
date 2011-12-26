@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <boost/function.hpp>
 #include <boost/asio.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
@@ -29,13 +30,23 @@ class Reply
 
 public:
 
-	enum reply_state
+	enum reply_state_out
 	{
-		state_none,
-		state_status,
-		state_header,
-		state_partial,
-		state_done
+		out_none,
+		out_status,
+		out_header,
+		out_content,
+		out_done
+	};
+
+	enum reply_state_in
+	{
+		in_none,
+		in_status,
+		in_header,
+		in_content_none,
+		in_content_data,
+		in_done
 	};
 
 	enum status_type
@@ -69,7 +80,10 @@ public:
 
 	void headers_complete();
 
-	void content(std::string);
+	void content();				// Signal content can be started
+	void content(std::string);		// Give content to reply with.
+
+	void content_bind(boost::function<void()>);
 
 	void finish();
 
@@ -95,17 +109,18 @@ private:
 
 	// State of incoming and outgoing streams.
 
-	reply_state m_in_state;
-	reply_state m_out_state;
+	reply_state_in m_in_state;
+	reply_state_out m_out_state;
 
 	// Condition sync
 
 	boost::condition_variable m_in_cond;
-	boost::mutex m_in_mutex;
+	boost::mutex m_in_mutex;			// In/out transition mutex.
 
-	// Have we already added some content?
+	// We need more content.
 
-	bool m_content_added;
+	boost::function<void()> m_in_bind;
+	bool m_in_bind_called;
 
 	/// The headers to be included in the reply.
 	std::vector<Hydra::Header> m_headers;
@@ -113,11 +128,6 @@ private:
 	/// The content to be sent in the reply.
 	
 	std::queue<std::string*> m_in;
-
-	bool m_q_data;
-
-	boost::condition_variable m_q_cond;
-	boost::mutex m_q_mutex;
 
 	// The content being sent in the reply.
 

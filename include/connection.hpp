@@ -37,11 +37,16 @@ public:
 	/// Construct a connection with the given io_service.
 	explicit Connection(boost::asio::io_service& io_service, Request_Handler& handler);
 
+	~Connection();
+
 	/// Get the socket associated with the connection.
 	boost::asio::ip::tcp::socket& socket();
 
 	/// Start the first asynchronous operation for the connection.
 	void start();
+
+	/// Address (as string)
+	std::string address();
 
 	Request& request();
 	
