@@ -41,6 +41,8 @@ public:
 
 	void handle(Connection::pointer connection);
 
+	void restore_signals();
+
 private:
 
 	// Global configuration
@@ -58,6 +60,10 @@ private:
 	// Host mapping
 
 	HostMap m_hosts;
+
+	// Previous signals
+
+	sigset_t m_old_mask;
 
 };
 

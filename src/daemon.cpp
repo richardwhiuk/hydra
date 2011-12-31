@@ -12,6 +12,7 @@
 #include "client.hpp"
 #include "server.hpp"
 
+#include <boost/thread.hpp>
 #include <boost/asio.hpp>
 
 Hydra::Daemon::Daemon(){
@@ -80,7 +81,34 @@ void Hydra::Daemon::run(){
 
 	}
 
-	
+
+	// Signals
+
+	// Block all signals for background thread.
+	sigset_t new_mask;
+	sigfillset(&new_mask);
+	pthread_sigmask(SIG_BLOCK, &new_mask, &m_old_mask);
+
+	// Run server in background thread.
+	boost::thread t(boost::bind(&boost::asio::io_service::run, &io_service));
+
+	// Restore previous signals.
+	pthread_sigmask(SIG_SETMASK, &m_old_mask, 0);
+
+	// Wait for signal indicating time to shut down.
+	sigset_t wait_mask;
+	sigemptyset(&wait_mask);
+	sigaddset(&wait_mask, SIGINT);
+	sigaddset(&wait_mask, SIGQUIT);
+	sigaddset(&wait_mask, SIGTERM);
+	pthread_sigmask(SIG_BLOCK, &wait_mask, 0);
+	int sig = 0;
+	sigwait(&wait_mask, &sig);
+
+	// Stop the server.
+	io_service.stop();
+	t.join();
+
 	/**
 
 	TODO: This code only works in Boost 1.47
@@ -121,7 +149,11 @@ void Hydra::Daemon::run(){
 
 	**/
 
-	io_service.run();
+}
+
+void Hydra::Daemon::restore_signals(){
+
+	pthread_sigmask(SIG_SETMASK, &m_old_mask, 0);
 
 }
 
