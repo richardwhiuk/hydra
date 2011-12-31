@@ -12,7 +12,7 @@
 
 #include <sstream>
 
-Hydra::Request::Request(long id) : m_id(id), m_state(START){
+Hydra::Request::Request() : m_state(START){
 
 }
 

@@ -12,7 +12,7 @@
 
 #include <sstream>
 
-Hydra::Response::Response(long id) : m_id(id), m_read_state(NONE), m_write_state(NONE), m_parse_state(PROTOCOL_H){
+Hydra::Response::Response() : m_read_state(NONE), m_write_state(NONE), m_parse_state(PROTOCOL_H){
 
 }
 

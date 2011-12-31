@@ -10,9 +10,7 @@
 
 #include "connection.hpp"
 
-long Hydra::Connection::id = 0;
-
-Hydra::Connection::Connection() : m_id(++id), m_request(m_id), m_response(m_id){
+Hydra::Connection::Connection() : m_request(), m_response(){
 	
 }
 

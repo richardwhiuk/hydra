@@ -25,10 +25,8 @@ class Request {
 
 public:
 
-	Request(long id);
+	Request();
 	
-	long m_id;
-
 	template < size_t T>
 	bool write_buffer(boost::array<char, T>&, size_t bytes);
 	

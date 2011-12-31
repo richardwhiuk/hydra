@@ -31,11 +31,7 @@ public:
 	Request& request();
 	Response& response();
 
-	long m_id;
-
 private:
-
-	static long id;
 
 	Connection();
 

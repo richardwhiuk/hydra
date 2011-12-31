@@ -24,9 +24,7 @@ class Response {
 
 public:
 
-	Response(long id);
-
-	long m_id;
+	Response();
 
 	void error(int code);
 
