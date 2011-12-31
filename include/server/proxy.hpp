@@ -8,6 +8,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
+#ifndef HYDRA_FILE_SERVER_PROXY_HPP
+#define HYDRA_FILE_SERVER_PROXY_HPP
+
 #include "server.hpp"
 #include "config.hpp"
 
@@ -85,4 +88,6 @@ private:
 }
 
 }
+
+#endif
 
