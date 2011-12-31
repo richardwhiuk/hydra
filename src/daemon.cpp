@@ -20,6 +20,14 @@ Hydra::Daemon::Daemon(){
 
 Hydra::Daemon::~Daemon(){
 	
+	for(std::list<Client::Base*>::iterator it = m_clients.begin(); it != m_clients.end(); ++it){
+		delete *it;
+	}
+
+	for(std::list<Server::Base*>::iterator it = m_servers.begin(); it != m_servers.end(); ++it){
+		delete *it;
+	}
+
 }
 
 void Hydra::Daemon::configure(std::string file){
