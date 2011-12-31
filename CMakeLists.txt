@@ -14,8 +14,7 @@ cmake_minimum_required (VERSION 2.6)
 
 project(hydra)
 
-set (HYDRA_VERSION_MAJOR 0)
-set (HYDRA_VERSION_MINOR 9)
+set (HYDRA_VERSION 0.2.0)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -Wall -Werror")
 
@@ -30,57 +29,43 @@ configure_file (
 
 include_directories("include" "${PROJECT_BINARY_DIR}/include")
 
-# Apache 2
-
-set(APACHE2_HEADER_FILES
-	include/apache2/engine.hpp
-	include/apache2/client.hpp
-	include/apache2/connection.hpp
-	include/apache2/server.hpp
-)
-
-set(APACHE2_SOURCE_FILES
-	src/apache2/engine.cpp
-	src/apache2/client.cpp
-	src/apache2/connection.cpp
-	src/apache2/server.cpp
-)
-
 # Core
 
 set(HEADER_FILES
-	${APACHE2_HEADER_FILES}
 	include/config.hpp
 	include/connection.hpp
-	include/engine.hpp
-	include/header.hpp
-	include/host.hpp
-	include/hydra.hpp
-	include/io_service_pool.hpp
-	include/reply.hpp
+	include/client.hpp
+	include/client/plain.hpp
+	include/client/ssl.hpp
+	include/daemon.hpp
+	include/exception.hpp
+	include/hostmap.hpp
+	include/http.hpp
 	include/request.hpp
-	include/request_handler.hpp
-	include/request_parser.hpp
+	include/response.hpp
 	include/server.hpp
+	include/server/proxy.hpp
 	include/version.hpp
 )
 
 set(SOURCE_FILES
-	${APACHE2_SOURCE_FILES}
 	src/config.cpp
 	src/connection.cpp
-	src/engine.cpp
-	src/host.cpp
-	src/io_service_pool.cpp
+	src/client.cpp
+	src/client/plain.cpp
+	src/client/ssl.cpp
+	src/daemon.cpp
+	src/exception.cpp
+	src/hostmap.cpp
+	src/http.cpp
 	src/main.cpp
-	src/request_handler.cpp
-	src/request_parser.cpp
-	src/reply.cpp
+	src/request.cpp
+	src/response.cpp
 	src/server.cpp
-	src/status_strings.cpp
+	src/server/proxy.cpp
 )
 
-add_executable(hydra ${HEADER_FILES} ${SOURCE_FILES} ${CGI_HEADER_FILES} ${CGI_SOURCE_FILES})
+add_executable(hydra ${HEADER_FILES} ${SOURCE_FILES})
 
 target_link_libraries(hydra ${HYDRA_LIBS})
 
