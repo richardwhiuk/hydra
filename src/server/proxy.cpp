@@ -84,7 +84,9 @@ void Hydra::Server::Proxy::Connection::handle_resolve(const boost::system::error
 
 		m_connection->response().error(503);
 
-		m_connection->response().write();
+		m_connection->response().done();
+
+		m_connection.reset();
 
 	}
 
@@ -114,6 +116,10 @@ void Hydra::Server::Proxy::Connection::handle_connect(const boost::system::error
 
 		m_connection->response().error(504);
 
+		m_connection->response().done();
+
+		m_connection.reset();
+
 	}
 
 }
@@ -139,6 +145,10 @@ void Hydra::Server::Proxy::Connection::handle_write(const boost::system::error_c
 	} else {
 
 		m_connection->response().error(502);
+
+		m_connection->response().done();
+
+		m_connection.reset();
 
 	}
 
