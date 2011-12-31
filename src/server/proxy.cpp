@@ -12,7 +12,7 @@
 
 #include <boost/bind.hpp>
 
-Hydra::Server::Proxy::Proxy(std::string name, Hydra::Config::Section config) : Base(name, config){
+Hydra::Server::Proxy::Proxy(std::string name, Hydra::Config::Section config, Daemon& hydra) : Base(name, config, hydra){
 
 }
 

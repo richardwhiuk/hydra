@@ -14,7 +14,7 @@
 
 #include "exception.hpp"
 
-Hydra::Server::Base::Base(std::string name, Hydra::Config::Section config) : m_name(name), m_config(config){
+Hydra::Server::Base::Base(std::string name, Hydra::Config::Section config, Daemon& hydra) : m_hydra(hydra), m_name(name), m_config(config){
 
 }
 
@@ -22,11 +22,11 @@ Hydra::Server::Base::~Base(){
 
 }
 
-Hydra::Server::Base* Hydra::Server::Create(std::string name, Hydra::Config::Section config){
+Hydra::Server::Base* Hydra::Server::Create(std::string name, Hydra::Config::Section config, Hydra::Daemon& hydra){
 
 	if(config.value("type") == "proxy"){
 
-		return new Hydra::Server::Proxy(name, config);
+		return new Hydra::Server::Proxy(name, config, hydra);
 
 	} else {
 

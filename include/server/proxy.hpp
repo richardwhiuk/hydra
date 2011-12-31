@@ -22,6 +22,8 @@
 
 namespace Hydra {
 
+class Daemon;
+
 namespace Server {
 
 class Proxy : public Base {
@@ -72,7 +74,7 @@ public:
 
 	};
 
-	Proxy(std::string name, Config::Section config);
+	Proxy(std::string name, Config::Section config, Daemon& hydra);
 	virtual ~Proxy();
 
 	virtual void run(boost::asio::io_service& io_service);

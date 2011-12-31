@@ -21,13 +21,15 @@
 
 namespace Hydra {
 
+class Daemon;
+
 namespace Server {
 
 class Base {
 
 public:
 
-	Base(std::string name, Config::Section config);
+	Base(std::string name, Config::Section config, Daemon& hydra);
 	virtual ~Base();
 
 	virtual void run(boost::asio::io_service& io_service) = 0;
@@ -38,12 +40,13 @@ public:
 
 protected:
 
+	Hydra::Daemon& m_hydra;
 	std::string m_name;
 	Config::Section m_config;
 
 };
 
-Base* Create(std::string name, Config::Section config); 
+Base* Create(std::string name, Config::Section config, Daemon& hydra); 
 
 }
 
