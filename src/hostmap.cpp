@@ -17,6 +17,12 @@ Hydra::HostMap::HostMap() : m_wildcard(0), m_host(0) {
 
 Hydra::HostMap::~HostMap(){
 
+	for(std::map<std::string, HostMap*>::iterator it = m_children.begin(); it != m_children.end(); ++it){
+
+		delete it->second;
+
+	}
+
 }
 
 std::list<std::string> Hydra::HostMap::split(std::string hostname){
