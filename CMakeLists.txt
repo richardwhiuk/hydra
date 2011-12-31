@@ -44,6 +44,7 @@ set(HEADER_FILES
 	include/request.hpp
 	include/response.hpp
 	include/server.hpp
+	include/server/apache2.hpp
 	include/server/proxy.hpp
 	include/version.hpp
 )
@@ -62,6 +63,7 @@ set(SOURCE_FILES
 	src/request.cpp
 	src/response.cpp
 	src/server.cpp
+	src/server/apache2.cpp
 	src/server/proxy.cpp
 )
 
