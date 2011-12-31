@@ -14,7 +14,7 @@
 
 #include "exception.hpp"
 
-Hydra::Server::Base::Base(std::string name, Hydra::Config::Section config) : m_config(config){
+Hydra::Server::Base::Base(std::string name, Hydra::Config::Section config) : m_name(name), m_config(config){
 
 }
 

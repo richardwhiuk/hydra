@@ -38,6 +38,7 @@ public:
 
 protected:
 
+	std::string m_name;
 	Config::Section m_config;
 
 };
