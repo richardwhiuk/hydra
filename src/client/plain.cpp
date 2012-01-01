@@ -49,10 +49,7 @@ void Hydra::Client::Plain::run(boost::asio::io_service& io_service){
 	
 		m_accept = new boost::asio::ip::tcp::acceptor(
 				io_service, 
-				boost::asio::ip::tcp::endpoint(
-					boost::asio::ip::tcp::v4(),
-					80
-				)
+				*endpoint
 			);
 
 		accept();
