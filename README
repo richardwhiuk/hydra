@@ -34,5 +34,5 @@ libboost-thread-dev
 libboost-system-dev
 cmake
 git
-
+libssl-dev
 

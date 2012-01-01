@@ -18,9 +18,11 @@ set (HYDRA_VERSION 0.2.0)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -Wall -Werror")
 
+find_package(OpenSSL REQUIRED)
+
 find_package(Boost COMPONENTS thread system REQUIRED)
 
-set (HYDRA_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY})
+set (HYDRA_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${OPENSSL_LIBRARIES})
 
 configure_file (
   "${PROJECT_SOURCE_DIR}/include/version.hpp.in"

@@ -8,16 +8,25 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
+#ifndef HYDRA_FILE_CLIENT_SSL
+#define HYDRA_FILE_CLIENT_SSL
+
 #include "client.hpp"
 #include "config.hpp"
+#include "connection.hpp"
 
 #include <string>
+
+#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
+#include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 
 namespace Hydra {
 
 namespace Client {
 
-class SSL : public Base {
+class SSL : public Client::Base {
 
 public:
 
@@ -26,9 +35,65 @@ public:
 
 	virtual void run(boost::asio::io_service&);
 
+	class Connection : public boost::enable_shared_from_this<Connection> {
+
+	public:
+
+		typedef boost::shared_ptr<Connection> pointer;
+
+		static pointer Create(boost::asio::io_service& io_service, Daemon& hydra, boost::asio::ssl::context& context);
+		~Connection();
+
+		void start();
+
+		boost::asio::ssl::stream<boost::asio::ip::tcp::socket>::lowest_layer_type& socket();
+		
+	private:
+
+		Connection(boost::asio::io_service& io_service, Daemon& hydra, boost::asio::ssl::context& context);
+
+		void handshake();
+
+		void handle_handshake(const boost::system::error_code& e);
+
+		void read();
+
+		void handle_read(const boost::system::error_code& e, std::size_t bytes_transferred);
+
+		void write();
+
+		void handle_write(const boost::system::error_code& e, std::size_t bytes_transferred);
+
+		void finish();
+
+		void handle_finish(const boost::system::error_code& e, std::size_t bytes_transferred);
+
+		Hydra::Connection::pointer m_connection;
+
+		Daemon& m_hydra;
+
+		boost::array<char, 8192> m_buffer_in;
+
+		std::string m_buffer_out;
+
+		boost::asio::ssl::stream<boost::asio::ip::tcp::socket> m_socket;
+
+	};
+
+protected:
+
+	void accept();
+
+	void handle(Connection::pointer connect, const boost::system::error_code& error);
+
+	boost::asio::ip::tcp::acceptor* m_accept;
+	boost::asio::ssl::context* m_context;
+
 };
 
 }
 
 }
+
+#endif
 
