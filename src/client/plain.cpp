@@ -20,6 +20,9 @@ Hydra::Client::Plain::Plain(std::string name, Config::Section config, Daemon& hy
 
 Hydra::Client::Plain::~Plain(){
 
+	if(m_accept)
+		delete m_accept;
+
 }
 
 void Hydra::Client::Plain::run(boost::asio::io_service& io_service){
