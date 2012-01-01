@@ -66,7 +66,7 @@ void Hydra::Server::Proxy::Connection::resolve(){
 
 	psft >> port;*/
 
-	boost::asio::ip::tcp::resolver::query query(m_config.value("server"), m_config.value("port"));
+	boost::asio::ip::tcp::resolver::query query(m_config.value_tag("server", m_connection->tag()), m_config.value_tag("port", m_connection->tag()));
 
 	m_resolver.async_resolve(query, boost::bind(&Connection::handle_resolve, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::iterator));
 
