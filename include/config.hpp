@@ -36,6 +36,9 @@ public:
 		std::string value(const std::string);
 		std::list<std::string> values(const std::string);
 
+		std::string value_tag(const std::string&, const std::string&);
+		std::list<std::string> values_tag(const std::string&, const std::string&);
+
 	private:
 
 		std::map<std::string, std::list<std::string> > m_values;

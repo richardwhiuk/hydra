@@ -256,8 +256,34 @@ std::string Hydra::Config::Section::value(std::string key){
 
 std::list<std::string> Hydra::Config::Section::values(const std::string key){
 	// Return [key]
-
+	
 	return m_values[key];
+
+}
+
+std::string Hydra::Config::Section::value_tag(const std::string& key, const std::string& tag){
+
+	try {
+		return value(key);
+	} catch(Exception* e){
+		delete e;
+		return value(key + ":" + tag);
+	}
+
+}
+
+std::list<std::string> Hydra::Config::Section::values_tag(const std::string& key, const std::string& tag){
+
+	std::list<std::string> result = values(key);
+
+	if(!result.empty()){
+		return result;
+
+	} else {
+
+		return values(key + ":" + tag);
+
+	}
 
 }
 
