@@ -9,6 +9,7 @@
 //
 
 #include "server/proxy.hpp"
+#include "server/sslproxy.hpp"
 
 #include <string>
 #include <pwd.h>
@@ -20,7 +21,7 @@ class Daemon;
 
 namespace Server {
 
-class Apache2 : public Proxy {
+class Apache2 : public Base {
 
 public:
 	Apache2(std::string name, Config::Section config, Daemon& hydra);
@@ -37,6 +38,9 @@ private:
 	void signal(std::string);
 
 	static bool s_done;
+
+	Proxy plain;
+	SslProxy ssl;
 
 	bool m_started;
 

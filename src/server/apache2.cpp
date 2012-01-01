@@ -19,7 +19,7 @@
 #include <grp.h>
 #include <unistd.h>
 
-Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config, Hydra::Daemon& daemon) : Proxy(name, config, daemon), m_started(false){
+Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config, Hydra::Daemon& daemon) : Base(name, config, daemon), plain(name, config, daemon), ssl(name, config, daemon), m_started(false){
 
 	// Setup ready to start Apache2.
 
@@ -167,7 +167,9 @@ Hydra::Server::Apache2::~Apache2(){
 
 void Hydra::Server::Apache2::run(boost::asio::io_service& io_service){
 
-	Proxy::run(io_service);
+	plain.run(io_service);
+
+	ssl.run(io_service);
 
 }
 
@@ -182,7 +184,15 @@ void Hydra::Server::Apache2::handle(Hydra::Connection::pointer connection){
 		m_started = true;
 	}
 
-	Proxy::handle(connection);
+	std::string type = m_config.value_tag("connection", connection->tag());
+
+	if(type == "plain"){
+		plain.handle(connection);
+	} else if(type == "ssl"){
+		ssl.handle(connection);
+	} else {
+		throw new Exception("Hydra->Server->Apache2->Unknown connection type");
+	}
 
 }
 
