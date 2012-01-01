@@ -159,7 +159,7 @@ void Hydra::Daemon::restore_signals(){
 
 void Hydra::Daemon::handle(Hydra::Connection::pointer connection){
 
-	m_hosts.resolve( connection->request().header("Host") )->handle(connection);
+	m_hosts.resolve( connection->request().header("Host"), connection->tag() )->handle(connection);
 
 }
 

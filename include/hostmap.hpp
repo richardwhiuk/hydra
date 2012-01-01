@@ -30,18 +30,18 @@ public:
 	HostMap();
 	~HostMap();
 
-	std::list<std::string> split(std::string host);
+	std::list<std::string> split_domain(std::string host);
 
-	void add(std::string host, Server::Base* server);
-	void add(std::list<std::string> host, Server::Base* server);
+	void add(std::string host, std::list<std::string> tags, Server::Base* server);
+	void add(std::list<std::string> host, std::list<std::string> tags, Server::Base* server);
 
-	Server::Base* resolve(std::string host);
-	Server::Base* resolve(std::list<std::string> host);
+	Server::Base* resolve(std::string host, std::string tag);
+	Server::Base* resolve(std::list<std::string> host, std::string tag);
 
 private:
 
-	Server::Base* m_wildcard;
-	Server::Base* m_host;
+	std::map<std::string, Server::Base*> m_wildcard;
+	std::map<std::string, Server::Base*> m_host;
 
 	std::map<std::string, HostMap*> m_children;
 

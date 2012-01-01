@@ -11,7 +11,7 @@
 #include "exception.hpp"
 #include "hostmap.hpp"
 
-Hydra::HostMap::HostMap() : m_wildcard(0), m_host(0) {
+Hydra::HostMap::HostMap(){
 
 }
 
@@ -25,7 +25,7 @@ Hydra::HostMap::~HostMap(){
 
 }
 
-std::list<std::string> Hydra::HostMap::split(std::string hostname){
+std::list<std::string> Hydra::HostMap::split_domain(std::string hostname){
 
 	size_t pos, x = 0;
 
@@ -45,17 +45,21 @@ std::list<std::string> Hydra::HostMap::split(std::string hostname){
 
 }
 
-void Hydra::HostMap::add(std::string hostname, Server::Base* server){
+void Hydra::HostMap::add(std::string hostname, std::list<std::string> tags, Server::Base* server){
 
-	add(split(hostname), server);
+	add(split_domain(hostname), tags, server);
 
 }
 
-void Hydra::HostMap::add(std::list<std::string> hostname, Server::Base* server){
+void Hydra::HostMap::add(std::list<std::string> hostname, std::list<std::string> tags, Server::Base* server){
 
 	if(hostname.size() == 0){
 
-		m_host = server;
+		for(std::list<std::string>::iterator it = tags.begin(); it != tags.end(); ++it){
+
+			m_host[*it] = server;
+
+		}
 
 		return;
 
@@ -63,7 +67,11 @@ void Hydra::HostMap::add(std::list<std::string> hostname, Server::Base* server){
 
 	if(hostname.size() == 1 && hostname.front() == "*"){
 
-		m_wildcard = server;
+		for(std::list<std::string>::iterator it = tags.begin(); it != tags.end(); ++it){
+
+			m_wildcard[*it] = server;
+
+		}
 
 	}
 
@@ -79,15 +87,15 @@ void Hydra::HostMap::add(std::list<std::string> hostname, Server::Base* server){
 
 	}
 
-	m_children[name]->add(hostname, server);
+	m_children[name]->add(hostname, tags, server);
 
 }
 
-Hydra::Server::Base* Hydra::HostMap::resolve(std::string hostname){
+Hydra::Server::Base* Hydra::HostMap::resolve(std::string hostname, std::string tag){
 
 	try {
 
-	return resolve(split(hostname));
+		return resolve(split_domain(hostname), tag);
 
 	} catch(Exception* e){
 
@@ -97,13 +105,15 @@ Hydra::Server::Base* Hydra::HostMap::resolve(std::string hostname){
 
 }
 
-Hydra::Server::Base* Hydra::HostMap::resolve(std::list<std::string> hostname){
+Hydra::Server::Base* Hydra::HostMap::resolve(std::list<std::string> hostname, std::string tag){
 
 	if(hostname.size() == 0){
 
-		if(m_host){
+		std::map<std::string, Server::Base*>::iterator hit = m_host.find(tag);
 
-			return m_host;
+		if(hit != m_host.end()){
+
+			return hit->second;
 
 		}
 
@@ -123,7 +133,7 @@ Hydra::Server::Base* Hydra::HostMap::resolve(std::list<std::string> hostname){
 
 			hostname.pop_front();
 
-			return it->second->resolve(hostname);
+			return it->second->resolve(hostname, tag);
 
 		} catch(Exception* e){
 
@@ -133,9 +143,11 @@ Hydra::Server::Base* Hydra::HostMap::resolve(std::list<std::string> hostname){
 
 	}
 
-	if(m_wildcard){
+	std::map<std::string, Server::Base*>::iterator wit = m_host.find(tag);
 
-		return m_wildcard;
+	if(wit != m_wildcard.end()){
+
+		return wit->second;
 
 	}
 

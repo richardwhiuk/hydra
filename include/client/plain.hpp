@@ -41,7 +41,7 @@ public:
 
 		typedef boost::shared_ptr<Connection> pointer;
 
-		static pointer Create(boost::asio::io_service& io_service, Daemon& hydra);
+		static pointer Create(boost::asio::io_service& io_service, Daemon& hydra, std::string& tag);
 		~Connection();
 
 		void start();
@@ -50,7 +50,7 @@ public:
 	
 	private:
 
-		Connection(boost::asio::io_service& io_service, Daemon& hydra);
+		Connection(boost::asio::io_service& io_service, Daemon& hydra, std::string& tag);
 
 		void read();
 
@@ -72,6 +72,8 @@ public:
 
 		std::string m_buffer_out;
 
+		std::string& m_tag;
+
 		boost::asio::ip::tcp::socket m_socket;
 	
 	};
@@ -83,6 +85,8 @@ private:
 	void handle(Connection::pointer connect, const boost::system::error_code& error);
 
 	boost::asio::ip::tcp::acceptor* m_accept;
+
+	std::string m_tag;
 
 };
 

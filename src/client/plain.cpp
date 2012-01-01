@@ -27,6 +27,8 @@ Hydra::Client::Plain::~Plain(){
 
 void Hydra::Client::Plain::run(boost::asio::io_service& io_service){
 
+	m_tag = m_config.value("tag");
+
 	std::stringstream pstr(m_config.value("port"));
 
 	unsigned short port;
@@ -60,7 +62,7 @@ void Hydra::Client::Plain::run(boost::asio::io_service& io_service){
 
 void Hydra::Client::Plain::accept(){
 
-	Client::Plain::Connection::pointer connect = Client::Plain::Connection::Create(m_accept->get_io_service(), m_hydra);
+	Client::Plain::Connection::pointer connect = Client::Plain::Connection::Create(m_accept->get_io_service(), m_hydra, m_tag);
 
 	m_accept->async_accept(connect->socket(), boost::bind(
 		&Client::Plain::handle, 
@@ -82,7 +84,7 @@ void Hydra::Client::Plain::handle(Connection::pointer connect, const boost::syst
 
 }
 
-Hydra::Client::Plain::Connection::Connection(boost::asio::io_service& io_service, Daemon& hydra) : m_hydra(hydra), m_socket(io_service){
+Hydra::Client::Plain::Connection::Connection(boost::asio::io_service& io_service, Daemon& hydra, std::string& tag) : m_hydra(hydra), m_tag(tag), m_socket(io_service){
 
 }
 
@@ -90,13 +92,13 @@ Hydra::Client::Plain::Connection::~Connection(){
 
 }
 
-Hydra::Client::Plain::Connection::pointer Hydra::Client::Plain::Connection::Create(boost::asio::io_service& io_service, Daemon& hydra){
-	return pointer(new Connection(io_service, hydra));
+Hydra::Client::Plain::Connection::pointer Hydra::Client::Plain::Connection::Create(boost::asio::io_service& io_service, Daemon& hydra, std::string& tag){
+	return pointer(new Connection(io_service, hydra, tag));
 }
 
 void Hydra::Client::Plain::Connection::start(){
 
-	m_connection = Hydra::Connection::Create();
+	m_connection = Hydra::Connection::Create(m_tag);
 	
 	read();
 

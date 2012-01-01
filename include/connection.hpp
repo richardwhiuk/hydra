@@ -25,19 +25,22 @@ public:
 
 	typedef boost::shared_ptr<Connection> pointer;
 
-	static pointer Create();
+	static pointer Create(std::string tag);
 	~Connection();
 
 	Request& request();
 	Response& response();
 
+	const std::string& tag();
+
 private:
 
-	Connection();
+	Connection(std::string tag);
 
 	Request m_request;
 	Response m_response;
 
+	std::string m_tag;
 
 };
 

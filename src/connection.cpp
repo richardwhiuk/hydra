@@ -10,7 +10,7 @@
 
 #include "connection.hpp"
 
-Hydra::Connection::Connection() : m_request(), m_response(){
+Hydra::Connection::Connection(std::string tag) : m_request(), m_response(), m_tag(tag){
 	
 }
 
@@ -18,8 +18,8 @@ Hydra::Connection::~Connection(){
 	
 }
 
-Hydra::Connection::pointer Hydra::Connection::Create(){
-	return pointer(new Connection());
+Hydra::Connection::pointer Hydra::Connection::Create(std::string tag){
+	return pointer(new Connection(tag));
 }
 
 Hydra::Request& Hydra::Connection::request(){
@@ -28,5 +28,9 @@ Hydra::Request& Hydra::Connection::request(){
 
 Hydra::Response& Hydra::Connection::response(){
 	return m_response;
+}
+
+const std::string& Hydra::Connection::tag(){
+	return m_tag;
 }
 

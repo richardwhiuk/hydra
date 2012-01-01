@@ -38,6 +38,8 @@ void Hydra::Client::SSL::run(boost::asio::io_service& io_service){
 
 	m_context->use_rsa_private_key_file(m_config.value("private").c_str(), boost::asio::ssl::context::pem);
 
+	m_tag = m_config.value("tag");
+
 	std::stringstream pstr(m_config.value("port"));
 
 	unsigned short port;
@@ -70,7 +72,7 @@ void Hydra::Client::SSL::run(boost::asio::io_service& io_service){
 
 void Hydra::Client::SSL::accept(){
 
-	Client::SSL::Connection::pointer connect = Client::SSL::Connection::Create(m_accept->get_io_service(), m_hydra, *m_context);
+	Client::SSL::Connection::pointer connect = Client::SSL::Connection::Create(m_accept->get_io_service(), m_hydra, *m_context, m_tag);
 
 	m_accept->async_accept(connect->socket(), boost::bind(
 		&Client::SSL::handle, 
@@ -92,7 +94,7 @@ void Hydra::Client::SSL::handle(Connection::pointer connect, const boost::system
 
 }
 
-Hydra::Client::SSL::Connection::Connection(boost::asio::io_service& io_service, Daemon& hydra, boost::asio::ssl::context& context) : m_hydra(hydra), m_socket(io_service, context){
+Hydra::Client::SSL::Connection::Connection(boost::asio::io_service& io_service, Daemon& hydra, boost::asio::ssl::context& context, std::string& tag) : m_hydra(hydra), m_socket(io_service, context), m_tag(tag){
 
 }
 
@@ -100,13 +102,13 @@ Hydra::Client::SSL::Connection::~Connection(){
 
 }
 
-Hydra::Client::SSL::Connection::pointer Hydra::Client::SSL::Connection::Create(boost::asio::io_service& io_service, Daemon& hydra, boost::asio::ssl::context& context){
-	return pointer(new Connection(io_service, hydra, context));
+Hydra::Client::SSL::Connection::pointer Hydra::Client::SSL::Connection::Create(boost::asio::io_service& io_service, Daemon& hydra, boost::asio::ssl::context& context, std::string& tag){
+	return pointer(new Connection(io_service, hydra, context, tag));
 }
 
 void Hydra::Client::SSL::Connection::start(){
 
-	m_connection = Hydra::Connection::Create();
+	m_connection = Hydra::Connection::Create(m_tag);
 	
 	handshake();
 

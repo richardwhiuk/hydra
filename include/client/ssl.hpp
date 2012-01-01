@@ -41,7 +41,7 @@ public:
 
 		typedef boost::shared_ptr<Connection> pointer;
 
-		static pointer Create(boost::asio::io_service& io_service, Daemon& hydra, boost::asio::ssl::context& context);
+		static pointer Create(boost::asio::io_service& io_service, Daemon& hydra, boost::asio::ssl::context& context, std::string& tag);
 		~Connection();
 
 		void start();
@@ -50,7 +50,7 @@ public:
 		
 	private:
 
-		Connection(boost::asio::io_service& io_service, Daemon& hydra, boost::asio::ssl::context& context);
+		Connection(boost::asio::io_service& io_service, Daemon& hydra, boost::asio::ssl::context& context, std::string& tag);
 
 		void handshake();
 
@@ -78,6 +78,8 @@ public:
 
 		boost::asio::ssl::stream<boost::asio::ip::tcp::socket> m_socket;
 
+		std::string& m_tag;
+
 	};
 
 protected:
@@ -88,6 +90,8 @@ protected:
 
 	boost::asio::ip::tcp::acceptor* m_accept;
 	boost::asio::ssl::context* m_context;
+
+	std::string m_tag;
 
 };
 

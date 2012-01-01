@@ -45,9 +45,11 @@ void Hydra::Server::Base::hosts(HostMap& map){
 
 	std::list<std::string> hosts = m_config.values("host");
 
+	std::list<std::string> tags = m_config.values("tag");
+
 	for(std::list<std::string>::iterator it = hosts.begin(); it != hosts.end(); ++it){
 
-		map.add(*it, this);
+		map.add(*it, tags, this);
 
 	}
 
