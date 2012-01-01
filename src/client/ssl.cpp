@@ -194,6 +194,8 @@ void Hydra::Client::SSL::Connection::handle_read(const boost::system::error_code
 
 		} catch(Exception* e){
 
+			delete e;
+
 			m_connection->response().error(404);
 
 			write();

@@ -165,6 +165,8 @@ void Hydra::Client::Plain::Connection::handle_read(const boost::system::error_co
 
 		} catch(Exception* e){
 
+			delete e;
+
 			m_connection->response().error(404);
 
 			write();
