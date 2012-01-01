@@ -11,6 +11,7 @@
 #include "server.hpp"
 
 #include "server/proxy.hpp"
+#include "server/sslproxy.hpp"
 #include "server/apache2.hpp"
 
 #include "exception.hpp"
@@ -28,6 +29,10 @@ Hydra::Server::Base* Hydra::Server::Create(std::string name, Hydra::Config::Sect
 	if(config.value("type") == "proxy"){
 
 		return new Hydra::Server::Proxy(name, config, hydra);
+
+	} else if (config.value("type") == "sslproxy"){
+
+		return new Hydra::Server::SslProxy(name, config, hydra);
 
 	} else if(config.value("type") == "apache2"){
 

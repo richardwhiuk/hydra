@@ -48,6 +48,7 @@ set(HEADER_FILES
 	include/server.hpp
 	include/server/apache2.hpp
 	include/server/proxy.hpp
+	include/server/sslproxy.hpp
 	include/version.hpp
 )
 
@@ -67,6 +68,7 @@ set(SOURCE_FILES
 	src/server.cpp
 	src/server/apache2.cpp
 	src/server/proxy.cpp
+	src/server/sslproxy.cpp
 )
 
 add_executable(hydra ${HEADER_FILES} ${SOURCE_FILES})
