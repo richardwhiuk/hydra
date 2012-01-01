@@ -180,13 +180,13 @@ void Hydra::Client::SSL::Connection::handle_read(const boost::system::error_code
 
 			try {
 				std::string header = m_connection->request().header("X-Forwarded-For");
-				header += ", " + m_socket.remote_endpoint().address().to_string();
+				header += ", " + m_socket.lowest_layer().remote_endpoint().address().to_string();
 
 			} catch(Exception* e){
 
 				delete e;
 
-				m_connection->request().header("X-Forward-For", m_socket.remote_endpoint().address().to_string());
+				m_connection->request().header("X-Forward-For", m_socket.lowest_layer().remote_endpoint().address().to_string());
 
 			}
 
