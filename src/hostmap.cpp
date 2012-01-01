@@ -143,7 +143,7 @@ Hydra::Server::Base* Hydra::HostMap::resolve(std::list<std::string> hostname, st
 
 	}
 
-	std::map<std::string, Server::Base*>::iterator wit = m_host.find(tag);
+	std::map<std::string, Server::Base*>::iterator wit = m_wildcard.find(tag);
 
 	if(wit != m_wildcard.end()){
 
