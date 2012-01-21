@@ -196,7 +196,9 @@ void Hydra::Response::read(){
 		m_read = NULL;
 		m_write = NULL;
 
-		m_finish();
+		if(m_finish){
+			m_finish();
+		}
 
 		return;
 
@@ -204,7 +206,9 @@ void Hydra::Response::read(){
 
 		// There is data to be written
 
-		m_write();
+		if(m_write){
+			m_write();
+		}
 
 		return;
 
@@ -212,7 +216,9 @@ void Hydra::Response::read(){
 
 		// There is content data available.
 
-		m_write();
+		if(m_write){
+			m_write();
+		}
 
 		return;
 
@@ -220,7 +226,9 @@ void Hydra::Response::read(){
 
 		// All available data has been written - go read some more.
 
-		m_read();
+		if(m_read){
+			m_read();
+		}
 
 		return;
 
