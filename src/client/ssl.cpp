@@ -172,21 +172,33 @@ void Hydra::Client::SSL::Connection::handle_read(const boost::system::error_code
 
 		// We have a complete request.
 
-		try {
+		// Add Proxy Headers
 
-			// Add Proxy Headers
+		try {
+			std::string header = m_connection->request().header("X-Forwarded-For");
+			header += ", " + m_socket.lowest_layer().remote_endpoint().address().to_string();
+
+		} catch(Exception* e){
+
+			delete e;
 
 			try {
-				std::string header = m_connection->request().header("X-Forwarded-For");
-				header += ", " + m_socket.lowest_layer().remote_endpoint().address().to_string();
+
+				m_connection->request().header("X-Forward-For", m_socket.lowest_layer().remote_endpoint().address().to_string());
 
 			} catch(Exception* e){
 
 				delete e;
 
-				m_connection->request().header("X-Forward-For", m_socket.lowest_layer().remote_endpoint().address().to_string());
+				m_connection->response().error(400);
 
 			}
+
+		}
+
+		// Handle Connection
+
+		try {
 
 			m_hydra.handle(m_connection);
 
@@ -197,7 +209,6 @@ void Hydra::Client::SSL::Connection::handle_read(const boost::system::error_code
 			m_connection->response().error(404);
 
 		}
-
 	}
 
 }

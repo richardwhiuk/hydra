@@ -142,22 +142,33 @@ void Hydra::Client::Plain::Connection::handle_read(const boost::system::error_co
 
 		// We have a complete request.
 
+		// Add Proxy Headers
+
 		try {
+			std::string header = m_connection->request().header("X-Forwarded-For");
+			header += ", " + m_socket.remote_endpoint().address().to_string();
 
+		} catch(Exception* e){
 
-			// Add Proxy Headers
+			delete e;
 
 			try {
-				std::string header = m_connection->request().header("X-Forwarded-For");
-				header += ", " + m_socket.remote_endpoint().address().to_string();
+
+				m_connection->request().header("X-Forward-For", m_socket.remote_endpoint().address().to_string());
 
 			} catch(Exception* e){
 
 				delete e;
 
-				m_connection->request().header("X-Forward-For", m_socket.remote_endpoint().address().to_string());
+				m_connection->response().error(400);
 
 			}
+
+		}
+
+		// Handle Connection
+
+		try {
 
 			m_hydra.handle(m_connection);
 
