@@ -166,8 +166,6 @@ void Hydra::Client::SSL::Connection::handle_read(const boost::system::error_code
 
 			m_connection->response().error(400);
 
-			write();
-
 			return;
 
 		}
@@ -197,8 +195,6 @@ void Hydra::Client::SSL::Connection::handle_read(const boost::system::error_code
 			delete e;
 
 			m_connection->response().error(404);
-
-			write();
 
 		}
 

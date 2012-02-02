@@ -136,8 +136,6 @@ void Hydra::Client::Plain::Connection::handle_read(const boost::system::error_co
 
 			m_connection->response().error(400);
 
-			write();
-
 			return;
 
 		}
@@ -168,8 +166,6 @@ void Hydra::Client::Plain::Connection::handle_read(const boost::system::error_co
 			delete e;
 
 			m_connection->response().error(404);
-
-			write();
 
 		}
 

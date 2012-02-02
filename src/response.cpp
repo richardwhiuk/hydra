@@ -119,6 +119,12 @@ void Hydra::Response::error(int code){
 
 	m_read_state = DONE;
 
+	if(m_write){
+	
+		m_write();
+
+	}
+
 }
 
 void Hydra::Response::read_buffer(std::string& buffer){
