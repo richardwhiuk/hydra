@@ -254,7 +254,7 @@ void Hydra::Response::done(){
 
 	m_read = NULL;
 
-	m_finish();
+	m_write();
 
 }
 
