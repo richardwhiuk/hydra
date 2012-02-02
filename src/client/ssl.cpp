@@ -110,6 +110,9 @@ void Hydra::Client::SSL::Connection::start(){
 
 	m_connection = Hydra::Connection::Create(m_tag);
 	
+	m_connection->response().bind_write(boost::bind(&Client::SSL::Connection::write, shared_from_this()));
+	m_connection->response().bind_finish(boost::bind(&Client::SSL::Connection::finish, shared_from_this()));
+
 	handshake();
 
 }
@@ -172,9 +175,6 @@ void Hydra::Client::SSL::Connection::handle_read(const boost::system::error_code
 		// We have a complete request.
 
 		try {
-
-			m_connection->response().bind_write(boost::bind(&Client::SSL::Connection::write, shared_from_this()));
-			m_connection->response().bind_finish(boost::bind(&Client::SSL::Connection::finish, shared_from_this()));
 
 			// Add Proxy Headers
 

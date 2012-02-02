@@ -99,6 +99,8 @@ Hydra::Client::Plain::Connection::pointer Hydra::Client::Plain::Connection::Crea
 void Hydra::Client::Plain::Connection::start(){
 
 	m_connection = Hydra::Connection::Create(m_tag);
+	m_connection->response().bind_write(boost::bind(&Client::Plain::Connection::write, shared_from_this()));
+	m_connection->response().bind_finish(boost::bind(&Client::Plain::Connection::finish, shared_from_this()));
 	
 	read();
 
@@ -144,8 +146,6 @@ void Hydra::Client::Plain::Connection::handle_read(const boost::system::error_co
 
 		try {
 
-			m_connection->response().bind_write(boost::bind(&Client::Plain::Connection::write, shared_from_this()));
-			m_connection->response().bind_finish(boost::bind(&Client::Plain::Connection::finish, shared_from_this()));
 
 			// Add Proxy Headers
 
