@@ -130,7 +130,7 @@ void Hydra::Client::Plain::Connection::handle_read(const boost::system::error_co
 			if(!done){
 				read();
 				return;
-			}		
+			}
 
 		} catch(Exception* e){
 
