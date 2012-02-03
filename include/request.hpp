@@ -28,7 +28,7 @@ public:
 	Request();
 	
 	template < size_t T>
-	bool write_buffer(boost::array<char, T>&, size_t bytes);
+	bool write_buffer(boost::array<char, T>&, size_t& bytes);
 	
 	std::string header(const std::string& key);
 	void header(const std::string& key, const std::string& value);
@@ -82,7 +82,7 @@ private:
 }
 
 template < size_t T>
-bool Hydra::Request::write_buffer(boost::array<char, T>& buffer, size_t bytes){
+bool Hydra::Request::write_buffer(boost::array<char, T>& buffer, size_t& bytes){
 
 	for(size_t i = 0; bytes > 0; --bytes, ++i){
 
