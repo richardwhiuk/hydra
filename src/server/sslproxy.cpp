@@ -89,8 +89,6 @@ void Hydra::Server::SslProxy::Connection::handle_resolve(const boost::system::er
 
 		m_connection->response().error(503);
 
-		m_connection->response().done();
-
 		m_connection.reset();
 
 	}
@@ -121,8 +119,6 @@ void Hydra::Server::SslProxy::Connection::handle_connect(const boost::system::er
 
 		m_connection->response().error(504);
 
-		m_connection->response().done();
-
 		m_connection.reset();
 
 	}
@@ -144,8 +140,6 @@ void Hydra::Server::SslProxy::Connection::handle_handshake(const boost::system::
 	} else {
 
 		m_connection->response().error(502);
-
-		m_connection->response().done();
 
 		m_connection.reset();
 
@@ -175,8 +169,6 @@ void Hydra::Server::SslProxy::Connection::handle_write(const boost::system::erro
 	} else {
 
 		m_connection->response().error(502);
-
-		m_connection->response().done();
 
 		m_connection.reset();
 
