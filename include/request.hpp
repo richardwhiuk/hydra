@@ -13,6 +13,7 @@
 
 #include <string>
 #include <map>
+#include <vector>
 
 #include <boost/array.hpp>
 
@@ -76,6 +77,7 @@ private:
 	std::string m_path;
 	std::string m_version;
 	std::map<std::string, std::string> m_headers;
+	std::vector<std::string> m_header_order;
 
 	std::string m_buffer;
 

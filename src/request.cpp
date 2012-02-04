@@ -26,6 +26,10 @@ const std::string& Hydra::Request::version(){
 
 void Hydra::Request::header(const std::string& key, const std::string& value){
 
+	if(m_headers.find(key) == m_headers.end()){
+		m_header_order.push_back(key);
+	}
+
 	m_headers[key] = value;
 
 }
@@ -50,9 +54,9 @@ void Hydra::Request::read_buffer(std::string& buffer){
 
 	ss << m_method << ' ' << m_path << " HTTP/" << m_version << "\r\n";
 
-	for(std::map<std::string, std::string>::iterator it = m_headers.begin(); it != m_headers.end(); ++it){
+	for(std::vector<std::string>::iterator it = m_header_order.begin(); it != m_header_order.end(); ++it){
 
-		ss << it->first << ": " << it->second << "\r\n";
+		ss << *it << ": " << m_headers[*it] << "\r\n";
 
 	}
 
@@ -226,6 +230,7 @@ bool Hydra::Request::parse_header(const char& in){
 			if(is_ctl(in)){
 				throw new Exception("Invalid header in HTTP Request");
 			} else {
+				m_header_order.push_back(m_buffer);
 				m_headers[m_buffer] = in;
 				m_header_state = HEADER_VALUE_CHAR;
 			}
