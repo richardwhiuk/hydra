@@ -159,7 +159,17 @@ void Hydra::Daemon::restore_signals(){
 
 void Hydra::Daemon::handle(Hydra::Connection::pointer connection){
 
-	m_hosts.resolve( connection->request().header("Host"), connection->tag() )->handle(connection);
+	std::string host = connection->request().header("Host");
+
+	size_t colon = host.find(':');
+
+	if(colon != std::string::npos){
+
+		host = host.substr(0,colon);
+
+	}
+
+	m_hosts.resolve( host, connection->tag() )->handle(connection);
 
 }
 
