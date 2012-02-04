@@ -56,9 +56,15 @@ public:
 
 		void handle_handshake(const boost::system::error_code& e);
 
+		void begin();
+
 		void read();
 
 		void handle_read(const boost::system::error_code& e, std::size_t bytes_transferred);
+
+		void consume();
+
+		void write_start();
 
 		void write();
 
@@ -83,6 +89,8 @@ public:
 		boost::asio::ssl::stream<boost::asio::ip::tcp::socket> m_socket;
 
 		std::string& m_tag;
+
+		bool m_persistent;
 
 	};
 

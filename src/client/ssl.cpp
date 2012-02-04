@@ -125,11 +125,27 @@ void Hydra::Client::SSL::Connection::handle_handshake(const boost::system::error
 
 	if(!e){
 
-		m_connection = Hydra::Connection::Create(m_tag);
-	
-		m_connection->response().bind_write(boost::bind(&Client::SSL::Connection::write, shared_from_this()));
-		m_connection->response().bind_finish(boost::bind(&Client::SSL::Connection::finish, shared_from_this()));
+		begin();
 
+	}
+
+}
+
+void Hydra::Client::SSL::Connection::begin(){
+
+	m_connection = Hydra::Connection::Create(m_tag);
+	
+	m_connection->response().bind_write(boost::bind(&Client::SSL::Connection::write, shared_from_this()));
+	m_connection->response().bind_finish(boost::bind(&Client::SSL::Connection::finish, shared_from_this()));
+
+	m_persistent = false;
+
+	if(m_bytes_total > m_bytes_start){
+
+		consume();
+
+	} else {
+		
 		read();
 
 	}
@@ -151,65 +167,129 @@ void Hydra::Client::SSL::Connection::handle_read(const boost::system::error_code
 
 	if(!e){
 
-		try {
+		m_bytes_start = 0;
+		m_bytes_total = bytes_transferred;
+
+		consume();
+
+	}
+
+}
+
+void Hydra::Client::SSL::Connection::consume(){
+
+	try {
 	
-			// Parse the request.
+		// Parse the request.
 
-			bool done = m_connection->request().write_buffer(m_buffer_in, m_bytes_start, bytes_transferred);
+		bool done = m_connection->request().write_buffer(m_buffer_in, m_bytes_start, m_bytes_total);
 
-			if(!done){
-				read();
-				return;
-			}		
+		if(!done){
+			read();
+			return;
+		}		
+
+	} catch(Exception* e){
+
+		m_connection->response().error(400);
+
+		return;
+
+	}
+
+	// We have a complete request.
+
+	// Should we persist the connection?
+
+	try {
+
+		if(
+			   (m_connection->request().header("Connection") == "Keep-Alive")
+			|| (m_connection->request().header("Connection") == "Keep-alive")
+			|| (m_connection->request().header("Connection") == "keep-Alive")
+			|| (m_connection->request().header("Connection") == "keep-alive")
+		){
+
+			m_persistent = true;
+
+		} else {
+
+			m_persistent = false;			
+
+		}
+
+	} catch(Exception* e){
+
+		delete e;
+
+		if(m_connection->request().version() == "1.1"){
+
+			m_persistent = true;
+
+		} else {
+
+			m_persistent = false;
+
+		}
+
+	}
+
+	// Add Proxy Headers
+
+	try {
+		std::string header = m_connection->request().header("X-Forwarded-For");
+		header += ", " + m_socket.lowest_layer().remote_endpoint().address().to_string();
+
+	} catch(Exception* e){
+
+		delete e;
+
+		try {
+
+			m_connection->request().header("X-Forward-For", m_socket.lowest_layer().remote_endpoint().address().to_string());
 
 		} catch(Exception* e){
+
+			delete e;
 
 			m_connection->response().error(400);
 
-			return;
-
 		}
 
-		// We have a complete request.
-
-		// Add Proxy Headers
-
-		try {
-			std::string header = m_connection->request().header("X-Forwarded-For");
-			header += ", " + m_socket.lowest_layer().remote_endpoint().address().to_string();
-
-		} catch(Exception* e){
-
-			delete e;
-
-			try {
-
-				m_connection->request().header("X-Forward-For", m_socket.lowest_layer().remote_endpoint().address().to_string());
-
-			} catch(Exception* e){
-
-				delete e;
-
-				m_connection->response().error(400);
-
-			}
-
-		}
-
-		// Handle Connection
-
-		try {
-
-			m_hydra.handle(m_connection);
-
-		} catch(Exception* e){
-
-			delete e;
-
-			m_connection->response().error(404);
-
-		}
 	}
+
+	// Handle Connection
+
+	try {
+
+		m_hydra.handle(m_connection);
+
+	} catch(Exception* e){
+
+		delete e;
+
+		m_connection->response().error(404);
+
+	}
+}
+
+void Hydra::Client::SSL::Connection::write_start(){
+
+	// Modify headers
+
+	if(m_persistent){
+
+		m_connection->response().header("Connection", "Keep-Alive");
+
+	} else {
+
+		m_connection->response().header("Connection", "close");
+
+	}
+
+	m_connection->response().bind_write(boost::bind(&Client::SSL::Connection::write_start, shared_from_this()));
+
+	write();
 
 }
 
@@ -250,6 +330,12 @@ void Hydra::Client::SSL::Connection::finish(){
 void Hydra::Client::SSL::Connection::handle_finish(const boost::system::error_code& e, std::size_t bytes_transferred){
 
 	m_connection.reset();
+
+	if(m_persistent){
+
+		begin();
+
+	}
 
 }
 
