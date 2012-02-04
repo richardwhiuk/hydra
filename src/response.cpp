@@ -151,7 +151,7 @@ void Hydra::Response::read_buffer(std::string& buffer){
 				break;
 			}
 
-			response << "HTTP/" << m_version << " " << m_code << code_text() << "\r\n";
+			response << "HTTP/" << m_version << " " << m_code << " " << code_text() << "\r\n";
 
 			for(std::map<std::string, std::string>::iterator it = m_headers.begin(); it != m_headers.end(); ++it){
 
