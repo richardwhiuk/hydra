@@ -56,6 +56,10 @@ public:
 
 		void handle_read(const boost::system::error_code& e, std::size_t bytes_transferred);
 
+		void consume();
+
+		void write_start();
+
 		void write();
 
 		void handle_write(const boost::system::error_code& e, std::size_t bytes_transferred);
@@ -79,6 +83,8 @@ public:
 		std::string& m_tag;
 
 		boost::asio::ip::tcp::socket m_socket;
+
+		bool m_persistent; // Persistent connection
 	
 	};
 

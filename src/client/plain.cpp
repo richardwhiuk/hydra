@@ -99,10 +99,16 @@ Hydra::Client::Plain::Connection::pointer Hydra::Client::Plain::Connection::Crea
 void Hydra::Client::Plain::Connection::start(){
 
 	m_connection = Hydra::Connection::Create(m_tag);
-	m_connection->response().bind_write(boost::bind(&Client::Plain::Connection::write, shared_from_this()));
+	m_connection->response().bind_write(boost::bind(&Client::Plain::Connection::write_start, shared_from_this()));
 	m_connection->response().bind_finish(boost::bind(&Client::Plain::Connection::finish, shared_from_this()));
 	
-	read();
+	m_persistent = false;
+
+	if(m_bytes_total > m_bytes_start){
+		consume();
+	} else {
+		read();
+	}
 
 }
 
@@ -121,56 +127,91 @@ void Hydra::Client::Plain::Connection::handle_read(const boost::system::error_co
 
 	if(!e){
 
-		try {
+		m_bytes_start = 0;
+		m_bytes_total = bytes_transferred;
+
+		consume();
+
+	} else {
+
+		m_connection.reset();
+
+	}
+
+}
+
+void Hydra::Client::Plain::Connection::consume(){
+
+	try {
 	
-			// Parse the request.
+		// Parse the request.
 
-			bool done = m_connection->request().write_buffer(m_buffer_in, m_bytes_start, bytes_transferred);
+		bool done = m_connection->request().write_buffer(m_buffer_in, m_bytes_start, m_bytes_total);
 
-			if(!done){
-				read();
-				return;
-			}
-
-		} catch(Exception* e){
-
-			m_connection->response().error(400);
-
+		if(!done){
+			read();
 			return;
+		}
+
+	} catch(Exception* e){
+
+		m_connection->response().error(400);
+
+		return;
+
+	}
+
+	// We have a complete request.
+
+	// Should we persist the connection?
+
+	try {
+
+		if(
+			   (m_connection->request().header("Connection") == "Keep-Alive")
+			|| (m_connection->request().header("Connection") == "Keep-alive")
+			|| (m_connection->request().header("Connection") == "keep-Alive")
+			|| (m_connection->request().header("Connection") == "keep-alive")
+		){
+
+			m_persistent = true;
+
+		} else {
+
+			m_persistent = false;			
 
 		}
 
-		// We have a complete request.
+	} catch(Exception* e){
 
-		// Add Proxy Headers
+		delete e;
 
-		try {
-			std::string header = m_connection->request().header("X-Forwarded-For");
-			header += ", " + m_socket.remote_endpoint().address().to_string();
+		if(m_connection->request().version() == "1.1"){
 
-		} catch(Exception* e){
+			m_persistent = true;
 
-			delete e;
+		} else {
 
-			try {
-
-				m_connection->request().header("X-Forward-For", m_socket.remote_endpoint().address().to_string());
-
-			} catch(Exception* e){
-
-				delete e;
-
-				m_connection->response().error(400);
-
-			}
+			m_persistent = false;
 
 		}
 
-		// Handle Connection
+	}
+
+
+	// Add Proxy Headers
+
+	try {
+		std::string header = m_connection->request().header("X-Forwarded-For");
+		header += ", " + m_socket.remote_endpoint().address().to_string();
+
+	} catch(Exception* e){
+
+		delete e;
 
 		try {
 
-			m_hydra.handle(m_connection);
+			m_connection->request().header("X-Forward-For", m_socket.remote_endpoint().address().to_string());
 
 		} catch(Exception* e){
 
@@ -181,6 +222,40 @@ void Hydra::Client::Plain::Connection::handle_read(const boost::system::error_co
 		}
 
 	}
+
+	// Handle Connection
+
+	try {
+
+		m_hydra.handle(m_connection);
+
+	} catch(Exception* e){
+
+		delete e;
+
+		m_connection->response().error(404);
+
+	}
+
+}
+
+void Hydra::Client::Plain::Connection::write_start(){
+
+	// Modify headers
+
+	if(m_persistent){
+
+		m_connection->response().header("Connection", "Keep-Alive");
+
+	} else {
+
+		m_connection->response().header("Connection", "close");
+
+	}
+
+	m_connection->response().bind_write(boost::bind(&Client::Plain::Connection::write_start, shared_from_this()));
+
+	write();
 
 }
 
@@ -225,6 +300,13 @@ void Hydra::Client::Plain::Connection::finish(){
 void Hydra::Client::Plain::Connection::handle_finish(const boost::system::error_code& e, std::size_t bytes_transferred){
 
 	m_connection.reset();
+
+	if(m_persistent){
+
+		start();		
+
+	}
+
 
 }
 
