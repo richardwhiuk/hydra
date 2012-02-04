@@ -24,6 +24,12 @@ Hydra::Response::~Response(){
 
 }
 
+void Hydra::Response::header(const std::string& key, const std::string& value){
+
+	m_headers[key] = value;
+
+}
+
 std::string Hydra::Response::code_text(){
 
 	switch(m_code){

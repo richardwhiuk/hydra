@@ -27,6 +27,8 @@ public:
 	Response();
 	~Response();
 
+	void header(const std::string& key, const std::string& value);
+
 	void error(int code);
 
 	void read_buffer(std::string&);
