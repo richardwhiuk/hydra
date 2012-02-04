@@ -217,7 +217,7 @@ void Hydra::Client::Plain::Connection::consume(){
 
 			delete e;
 
-			m_connection->response().error(404);
+			m_connection->response().error(400);
 
 		}
 
