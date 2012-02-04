@@ -112,7 +112,7 @@ std::string Hydra::Response::code_text(){
 
 void Hydra::Response::error(int code){
 
-	m_version = "1.0";
+	m_version = "1.1";
 
 	m_code = code;
 
