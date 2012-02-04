@@ -119,9 +119,9 @@ void Hydra::Response::error(int code){
 	m_headers["Content-Type"] = "text/html";
 	m_headers["Server"] = "Hydra";
 
-	std::stringstream buffer("<html><body><h1>");
+	std::stringstream buffer("");
 
-	buffer << code << " " << code_text() << "</h1></body></html>";
+	buffer << "<html><body><h1>" << code << " " << code_text() << "</h1></body></html>";
 
 	std::stringstream ss;
 
