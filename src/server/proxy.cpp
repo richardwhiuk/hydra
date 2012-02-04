@@ -158,11 +158,22 @@ void Hydra::Server::Proxy::Connection::handle_read(const boost::system::error_co
 
 	if(!err){
 
-		m_connection->response().write_buffer(m_buffer_in, bytes);
+		try {
+			m_connection->response().write_buffer(m_buffer_in, bytes);
 
-		m_connection->response().bind_read(boost::bind(&Connection::read, shared_from_this()));
+			m_connection->response().bind_read(boost::bind(&Connection::read, shared_from_this()));
 
-		m_connection->response().write();
+			m_connection->response().write();
+
+		} catch(Exception* e){
+
+			delete e;
+
+			m_connection->response().done();
+
+			m_connection.reset();
+
+		}
 
 	} else if(err != boost::asio::error::eof) {
 

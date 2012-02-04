@@ -182,15 +182,28 @@ void Hydra::Server::SslProxy::Connection::read(){
 
 }
 
+#include <iostream>
+
 void Hydra::Server::SslProxy::Connection::handle_read(const boost::system::error_code& err, std::size_t bytes){
 
 	if(!err){
 
-		m_connection->response().write_buffer(m_buffer_in, bytes);
+		try {
+			m_connection->response().write_buffer(m_buffer_in, bytes);
 
-		m_connection->response().bind_read(boost::bind(&Connection::read, shared_from_this()));
+			m_connection->response().bind_read(boost::bind(&Connection::read, shared_from_this()));
 
-		m_connection->response().write();
+			m_connection->response().write();
+
+		} catch(Exception* e) {
+
+			delete e;
+
+			m_connection->response().done();
+	
+			m_connection.reset();
+
+		}
 
 	} else if(err != boost::asio::error::eof) {
 
