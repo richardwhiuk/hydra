@@ -20,6 +20,10 @@ const std::string& Hydra::Request::path(){
 	return m_path;
 }
 
+const std::string& Hydra::Request::version(){
+	return m_version;
+}
+
 void Hydra::Request::header(const std::string& key, const std::string& value){
 
 	m_headers[key] = value;

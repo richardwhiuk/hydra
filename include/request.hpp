@@ -33,6 +33,8 @@ public:
 	std::string header(const std::string& key);
 	void header(const std::string& key, const std::string& value);
 
+	const std::string& version();
+
 	const std::string& path();
 
 	void read_buffer(std::string&);
