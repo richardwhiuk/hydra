@@ -16,6 +16,14 @@ Hydra::Response::Response() : m_read_state(NONE), m_write_state(NONE), m_parse_s
 
 }
 
+Hydra::Response::~Response(){
+
+	m_read = NULL;
+	m_write = NULL;
+	m_finish = NULL;
+
+}
+
 std::string Hydra::Response::code_text(){
 
 	switch(m_code){

@@ -25,6 +25,7 @@ class Response {
 public:
 
 	Response();
+	~Response();
 
 	void error(int code);
 
