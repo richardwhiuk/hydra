@@ -70,6 +70,10 @@ public:
 
 		boost::array<char, 8192> m_buffer_in;
 
+		size_t m_bytes_start; // Position in buffer
+
+		size_t m_bytes_total; // Valid bytes in buffer
+
 		std::string m_buffer_out;
 
 		std::string& m_tag;

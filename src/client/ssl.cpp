@@ -94,7 +94,7 @@ void Hydra::Client::SSL::handle(Connection::pointer connect, const boost::system
 
 }
 
-Hydra::Client::SSL::Connection::Connection(boost::asio::io_service& io_service, Daemon& hydra, boost::asio::ssl::context& context, std::string& tag) : m_hydra(hydra), m_socket(io_service, context), m_tag(tag){
+Hydra::Client::SSL::Connection::Connection(boost::asio::io_service& io_service, Daemon& hydra, boost::asio::ssl::context& context, std::string& tag) : m_hydra(hydra), m_bytes_start(0), m_bytes_total(0), m_socket(io_service, context), m_tag(tag){
 
 }
 
@@ -155,7 +155,7 @@ void Hydra::Client::SSL::Connection::handle_read(const boost::system::error_code
 	
 			// Parse the request.
 
-			bool done = m_connection->request().write_buffer(m_buffer_in, bytes_transferred);
+			bool done = m_connection->request().write_buffer(m_buffer_in, m_bytes_start, bytes_transferred);
 
 			if(!done){
 				read();

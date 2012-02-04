@@ -84,7 +84,7 @@ void Hydra::Client::Plain::handle(Connection::pointer connect, const boost::syst
 
 }
 
-Hydra::Client::Plain::Connection::Connection(boost::asio::io_service& io_service, Daemon& hydra, std::string& tag) : m_hydra(hydra), m_tag(tag), m_socket(io_service){
+Hydra::Client::Plain::Connection::Connection(boost::asio::io_service& io_service, Daemon& hydra, std::string& tag) : m_hydra(hydra), m_bytes_start(0), m_bytes_total(0), m_tag(tag), m_socket(io_service){
 
 }
 
@@ -125,7 +125,7 @@ void Hydra::Client::Plain::Connection::handle_read(const boost::system::error_co
 	
 			// Parse the request.
 
-			bool done = m_connection->request().write_buffer(m_buffer_in, bytes_transferred);
+			bool done = m_connection->request().write_buffer(m_buffer_in, m_bytes_start, bytes_transferred);
 
 			if(!done){
 				read();
