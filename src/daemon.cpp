@@ -165,7 +165,9 @@ void Hydra::Daemon::handle(Hydra::Connection::pointer connection){
 
 	if(colon != std::string::npos){
 
-		host = host.substr(0,colon);
+		host = host.substr(0, colon);
+
+		connection->request().header(host);
 
 	}
 
