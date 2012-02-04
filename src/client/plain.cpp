@@ -277,6 +277,10 @@ void Hydra::Client::Plain::Connection::handle_write(const boost::system::error_c
 
 		m_connection->response().read();
 
+	} else {
+
+		m_connection.reset();
+
 	}
 
 }
