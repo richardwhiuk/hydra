@@ -108,11 +108,6 @@ Hydra::Client::SSL::Connection::pointer Hydra::Client::SSL::Connection::Create(b
 
 void Hydra::Client::SSL::Connection::start(){
 
-	m_connection = Hydra::Connection::Create(m_tag);
-	
-	m_connection->response().bind_write(boost::bind(&Client::SSL::Connection::write, shared_from_this()));
-	m_connection->response().bind_finish(boost::bind(&Client::SSL::Connection::finish, shared_from_this()));
-
 	handshake();
 
 }
@@ -129,6 +124,11 @@ void Hydra::Client::SSL::Connection::handshake(){
 void Hydra::Client::SSL::Connection::handle_handshake(const boost::system::error_code& e){
 
 	if(!e){
+
+		m_connection = Hydra::Connection::Create(m_tag);
+	
+		m_connection->response().bind_write(boost::bind(&Client::SSL::Connection::write, shared_from_this()));
+		m_connection->response().bind_finish(boost::bind(&Client::SSL::Connection::finish, shared_from_this()));
 
 		read();
 
