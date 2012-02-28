@@ -11,6 +11,7 @@
 #include "client/plain.hpp"
 #include "connection.hpp"
 #include "daemon.hpp"
+#include "log.hpp"
 
 #include <boost/bind.hpp>
 
@@ -198,7 +199,6 @@ void Hydra::Client::Plain::Connection::consume(){
 
 	}
 
-
 	// Add Proxy Headers
 
 	try {
@@ -302,6 +302,19 @@ void Hydra::Client::Plain::Connection::finish(){
 }
 
 void Hydra::Client::Plain::Connection::handle_finish(const boost::system::error_code& e, std::size_t bytes_transferred){
+
+	{
+		boost::shared_ptr<Hydra::Log> access = Log::access();
+
+		(*access) 	<< "[" << m_socket.remote_endpoint().address().to_string()
+				<< "] [" << m_tag
+				<< "] [" << m_connection->request().method()
+				<< "] [" << m_connection->request().header("Host")
+				<< "] [" << m_connection->request().path()
+				<< "] [" << m_connection->response().code()
+				<< "]" << std::endl;
+
+	}
 
 	m_connection.reset();
 
