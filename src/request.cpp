@@ -24,6 +24,10 @@ const std::string& Hydra::Request::version(){
 	return m_version;
 }
 
+const std::string& Hydra::Request::method(){
+	return m_method;
+}
+
 void Hydra::Request::header(const std::string& key, const std::string& value){
 
 	if(m_headers.find(key) == m_headers.end()){

@@ -34,6 +34,8 @@ public:
 	std::string header(const std::string& key);
 	void header(const std::string& key, const std::string& value);
 
+	const std::string& method();
+
 	const std::string& version();
 
 	const std::string& path();
