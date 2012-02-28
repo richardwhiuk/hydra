@@ -43,6 +43,7 @@ set(HEADER_FILES
 	include/exception.hpp
 	include/hostmap.hpp
 	include/http.hpp
+	include/log.hpp
 	include/request.hpp
 	include/response.hpp
 	include/server.hpp
@@ -62,6 +63,7 @@ set(SOURCE_FILES
 	src/exception.cpp
 	src/hostmap.cpp
 	src/http.cpp
+	src/log.cpp
 	src/main.cpp
 	src/request.cpp
 	src/response.cpp
