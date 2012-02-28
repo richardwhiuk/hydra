@@ -24,6 +24,10 @@ Hydra::Response::~Response(){
 
 }
 
+int Hydra::Response::code(){
+	return m_code;
+}
+
 void Hydra::Response::header(const std::string& key, const std::string& value){
 
 	m_headers[key] = value;
