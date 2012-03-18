@@ -309,8 +309,19 @@ void Hydra::Client::Plain::Connection::handle_finish(const boost::system::error_
 		(*access) 	<< "[" << m_socket.remote_endpoint().address().to_string()
 				<< "] [" << m_tag
 				<< "] [" << m_connection->request().method()
-				<< "] [" << m_connection->request().header("Host")
-				<< "] [" << m_connection->request().path()
+				<< "] [";
+
+		try {
+		
+			(*access) << m_connection->request().header("Host");
+
+		} catch(Exception e*){
+
+			delete e;
+
+		}
+		
+		(*access)	<< "] [" << m_connection->request().path()
 				<< "] [" << m_connection->response().code()
 				<< "]" << std::endl;
 
