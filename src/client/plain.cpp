@@ -315,7 +315,7 @@ void Hydra::Client::Plain::Connection::handle_finish(const boost::system::error_
 		
 			(*access) << m_connection->request().header("Host");
 
-		} catch(Exception e*){
+		} catch(Exception* e){
 
 			delete e;
 

@@ -11,6 +11,7 @@
 #include "client/ssl.hpp"
 #include "connection.hpp"
 #include "daemon.hpp"
+#include "log.hpp"
 
 #include <boost/bind.hpp>
 
@@ -328,6 +329,30 @@ void Hydra::Client::SSL::Connection::finish(){
 }
 
 void Hydra::Client::SSL::Connection::handle_finish(const boost::system::error_code& e, std::size_t bytes_transferred){
+
+	{
+		boost::shared_ptr<Hydra::Log> access = Log::access();
+
+		(*access) 	<< "[" << m_socket.remote_endpoint().address().to_string()
+				<< "] [" << m_tag
+				<< "] [" << m_connection->request().method()
+				<< "] [";
+
+		try {
+		
+			(*access) << m_connection->request().header("Host");
+
+		} catch(Exception* e){
+
+			delete e;
+
+		}
+		
+		(*access)	<< "] [" << m_connection->request().path()
+				<< "] [" << m_connection->response().code()
+				<< "]" << std::endl;
+
+	}
 
 	m_connection.reset();
 
