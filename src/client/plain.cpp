@@ -253,7 +253,7 @@ void Hydra::Client::Plain::Connection::write_start(){
 
 	}
 
-	m_connection->response().bind_write(boost::bind(&Client::Plain::Connection::write_start, shared_from_this()));
+	m_connection->response().bind_write(boost::bind(&Client::Plain::Connection::write, shared_from_this()));
 
 	write();
 

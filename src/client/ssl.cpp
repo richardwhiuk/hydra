@@ -287,7 +287,7 @@ void Hydra::Client::SSL::Connection::write_start(){
 
 	}
 
-	m_connection->response().bind_write(boost::bind(&Client::SSL::Connection::write_start, shared_from_this()));
+	m_connection->response().bind_write(boost::bind(&Client::SSL::Connection::write, shared_from_this()));
 
 	write();
 
