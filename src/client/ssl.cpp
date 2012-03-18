@@ -333,7 +333,7 @@ void Hydra::Client::SSL::Connection::handle_finish(const boost::system::error_co
 	{
 		boost::shared_ptr<Hydra::Log> access = Log::access();
 
-		(*access) 	<< "[" << m_socket.remote_endpoint().address().to_string()
+		(*access) 	<< "[" << m_socket.lowest_layer().remote_endpoint().address().to_string()
 				<< "] [" << m_tag
 				<< "] [" << m_connection->request().method()
 				<< "] [";
