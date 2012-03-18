@@ -303,38 +303,45 @@ void Hydra::Client::Plain::Connection::finish(){
 
 void Hydra::Client::Plain::Connection::handle_finish(const boost::system::error_code& e, std::size_t bytes_transferred){
 
-	{
-		boost::shared_ptr<Hydra::Log> access = Log::access();
+	if(!e){
 
-		(*access) 	<< "[" << m_socket.remote_endpoint().address().to_string()
-				<< "] [" << m_tag
-				<< "] [" << m_connection->request().method()
-				<< "] [";
+		{
+			boost::shared_ptr<Hydra::Log> access = Log::access();
 
-		try {
+			(*access) 	<< "[" << m_socket.remote_endpoint().address().to_string()
+					<< "] [" << m_tag
+					<< "] [" << m_connection->request().method()
+					<< "] [";
+
+			try {
 		
-			(*access) << m_connection->request().header("Host");
+				(*access) << m_connection->request().header("Host");
 
-		} catch(Exception* e){
+			} catch(Exception* e){
 
-			delete e;
+				delete e;
+
+			}
+		
+			(*access)	<< "] [" << m_connection->request().path()
+					<< "] [" << m_connection->response().code()
+					<< "]" << std::endl;
 
 		}
-		
-		(*access)	<< "] [" << m_connection->request().path()
-				<< "] [" << m_connection->response().code()
-				<< "]" << std::endl;
+	
+		m_connection.reset();
+	
+		if(m_persistent){
+
+			start();		
+	
+		}
+
+	} else {
+
+		m_connection.reset();
 
 	}
-
-	m_connection.reset();
-
-	if(m_persistent){
-
-		start();		
-
-	}
-
 
 }
 
