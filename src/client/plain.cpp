@@ -85,7 +85,7 @@ void Hydra::Client::Plain::handle(Connection::pointer connect, const boost::syst
 
 }
 
-Hydra::Client::Plain::Connection::Connection(boost::asio::io_service& io_service, Daemon& hydra, std::string& tag) : m_hydra(hydra), m_bytes_start(0), m_bytes_total(0), m_tag(tag), m_socket(io_service){
+Hydra::Client::Plain::Connection::Connection(boost::asio::io_service& io_service, Daemon& hydra, std::string& tag) : m_hydra(hydra), m_bytes_start(0), m_bytes_total(0), m_tag(tag), m_socket(io_service), m_timer(io_service), m_read_timeout(10), m_write_timeout(10){
 
 }
 
@@ -117,16 +117,52 @@ void Hydra::Client::Plain::Connection::read(){
 
 	// Async read.
 
-	m_socket.async_read_some(
+	timeout(boost::posix_time::seconds(m_read_timeout));
+
+	boost::asio::async_read(
+		m_socket,
 		boost::asio::buffer(m_buffer_in), 
+		boost::asio::transfer_at_least(1),			
 		boost::bind(&Client::Plain::Connection::handle_read, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred)
 	);
+
+}
+
+void Hydra::Client::Plain::Connection::timeout(boost::posix_time::time_duration time){
+
+	// Prevent Async Timeout
+
+	m_timer.expires_from_now(time);
+
+	m_timer.async_wait(
+		boost::bind(
+			&Client::Plain::Connection::handle_timeout,
+			shared_from_this(),
+			boost::asio::placeholders::error
+		)
+	);
+
+}
+
+void Hydra::Client::Plain::Connection::handle_timeout(const boost::system::error_code& e){
+
+	if (e != boost::asio::error::operation_aborted){
+
+		// Close socket with prejudice.
+
+		m_socket.cancel();
+		m_socket.close();
+
+	}
+
 
 }
 
 void Hydra::Client::Plain::Connection::handle_read(const boost::system::error_code& e, std::size_t bytes_transferred){
 
 	if(!e){
+
+		m_timer.cancel();
 
 		m_bytes_start = 0;
 		m_bytes_total = bytes_transferred;
@@ -263,6 +299,10 @@ void Hydra::Client::Plain::Connection::write(){
 
 	m_connection->response().read_buffer(m_buffer_out);
 
+	// Async write
+
+	timeout(boost::posix_time::seconds(m_write_timeout));
+
 	boost::asio::async_write(
 		m_socket,
 		boost::asio::buffer(m_buffer_out),
@@ -274,6 +314,8 @@ void Hydra::Client::Plain::Connection::write(){
 void Hydra::Client::Plain::Connection::handle_write(const boost::system::error_code& e, std::size_t bytes_transferred){
 
 	if(!e){
+
+		m_timer.cancel();
 
 		m_connection->response().read();
 
@@ -292,6 +334,10 @@ boost::asio::ip::tcp::socket& Hydra::Client::Plain::Connection::socket(){
 void Hydra::Client::Plain::Connection::finish(){
 
 	m_connection->response().read_buffer(m_buffer_out);
+
+	// Async write
+
+	timeout(boost::posix_time::seconds(m_write_timeout));
 
 	boost::asio::async_write(
 		m_socket,

@@ -21,6 +21,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
+#include <boost/date_time/posix_time/posix_time_types.hpp>
 
 namespace Hydra {
 
@@ -51,6 +52,10 @@ public:
 	private:
 
 		Connection(boost::asio::io_service& io_service, Daemon& hydra, std::string& tag);
+
+		void timeout(boost::posix_time::time_duration time);
+
+		void handle_timeout(const boost::system::error_code& e);
 
 		void read();
 
@@ -85,6 +90,12 @@ public:
 		boost::asio::ip::tcp::socket m_socket;
 
 		bool m_persistent; // Persistent connection
+
+		boost::asio::deadline_timer m_timer;	// Prevent client's from holding on to sockets forever.
+
+		int m_read_timeout;	// Read timeout
+
+		int m_write_timeout;	// Write timeout
 	
 	};
 
