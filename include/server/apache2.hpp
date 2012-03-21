@@ -31,7 +31,7 @@ public:
 
 	virtual void handle(Hydra::Connection::pointer connection);
 
-	static void mkdirs();
+	void mkdirs();
 
 private:
 

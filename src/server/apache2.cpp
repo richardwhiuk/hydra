@@ -105,13 +105,11 @@ Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config,
 
 	mkdirs();
 
+	// Check permissions of the directories
+
 	{
 		std::string dir = "/var/run/hydra/apache2/" + name;
 		
-		if(mkdir(dir.c_str(), 00775) && errno != EEXIST){
-			throw new Exception("Hydra->Server->Apache2->Failed to create directory");
-		}
-
 		if(chown(dir.c_str(), m_uid, m_gid)){
 			throw new Exception("Hydra->Server->Apache2->Failed to change directory permissions");
 		}
@@ -120,10 +118,6 @@ Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config,
 	{
 		std::string dir = "/var/lock/hydra/apache2/" + name;
 		
-		if(mkdir(dir.c_str(), 00775) && errno != EEXIST){
-			throw new Exception("Hydra->Server->Apache2->Failed to create directory");
-		}
-
 		if(chown(dir.c_str(), m_uid, m_gid)){
 			throw new Exception("Hydra->Server->Apache2->Failed to change directory permissions");
 		}
@@ -132,22 +126,6 @@ Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config,
 	{
 		std::string dir = "/var/log/hydra/apache2/" + name;
 		
-		if(mkdir(dir.c_str(), 00775) && errno != EEXIST){
-			throw new Exception("Hydra->Server->Apache2->Failed to create directory");
-		}
-
-		if(chown(dir.c_str(), m_uid, m_gid)){
-			throw new Exception("Hydra->Server->Apache2->Failed to change directory permissions");
-		}
-	}
-
-	{
-		std::string dir = "/var/log/hydra/apache2/" + name;
-		
-		if(mkdir(dir.c_str(), 00775) && errno != EEXIST){
-			throw new Exception("Hydra->Server->Apache2->Failed to create directory");
-		}
-
 		if(chown(dir.c_str(), m_uid, m_gid)){
 			throw new Exception("Hydra->Server->Apache2->Failed to change directory permissions");
 		}
@@ -265,28 +243,40 @@ bool Hydra::Server::Apache2::s_done = false;
 
 void Hydra::Server::Apache2::mkdirs(){
 
+	std::vector<std::string> dirs;
+
 	if(!s_done){
 
-		if(mkdir("/var/run/hydra", 00775) && errno != EEXIST)
-			throw new Exception("Hydra->Server->Apache2->Failed to create directory");
-
-		if(mkdir("/var/run/hydra/apache2", 00775) && errno != EEXIST)
-			throw new Exception("Hydra->Server->Apache2->Failed to create directory");
-
-		if(mkdir("/var/lock/hydra", 00775) && errno != EEXIST)
-			throw new Exception("Hydra->Server->Apache2->Failed to create directory");
-
-		if(mkdir("/var/lock/hydra/apache2", 00775) && errno != EEXIST)
-			throw new Exception("Hydra->Server->Apache2->Failed to create directory");
-
-		if(mkdir("/var/log/hydra", 00775) && errno != EEXIST)
-			throw new Exception("Hydra->Server->Apache2->Failed to create directory");
-
-		if(mkdir("/var/log/hydra/apache2", 00775) && errno != EEXIST)
-			throw new Exception("Hydra->Server->Apache2->Failed to create directory");
+		dirs.push_back("/var/run/hydra");
+		dirs.push_back("/var/run/hydra/apache2");
+		dirs.push_back("/var/lock/hydra");
+		dirs.push_back("/var/lock/hydra/apache2");
+		dirs.push_back("/var/log/hydra");
+		dirs.push_back("/var/log/hydra/apache2");
 
 		s_done = true;
 
+	}
+
+	size_t start = 0;
+	size_t pos;
+
+	do {
+
+		pos = m_name.find_first_of('/', start);
+
+		dirs.push_back(std::string("/var/run/hydra/apache2/" + m_name.substr(0, pos)));
+		dirs.push_back(std::string("/var/lock/hydra/apache2/" + m_name.substr(0, pos)));
+		dirs.push_back(std::string("/var/log/hydra/apache2/" + m_name.substr(0, pos)));
+
+		start = pos + 1;
+	
+	} while(pos != std::string::npos);
+
+	for(std::vector<std::string>::iterator it = dirs.begin(); it != dirs.end(); ++it){
+		if(mkdir(it->c_str(), 00775) && errno != EEXIST){
+			throw new Exception(std::string("Hydra->Server->Apache2->Failed to create directory [") + *it + "]");
+		}
 	}
 
 }
