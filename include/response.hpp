@@ -69,9 +69,8 @@ private:
 		CRLF,
 		HEADER,
 		HEADER_KEY,
-		HEADER_SPACE,
+		HEADER_VALUE_SPACE,
 		HEADER_VALUE,
-		HEADER_VALUE_CHAR,
 		FINAL_CRLF,
 		BODY
 	};
@@ -208,33 +207,31 @@ void Hydra::Response::write_buffer(boost::array<char, T>& buffer, size_t bytes){
 				if(is_char(buffer[i]) && !is_ctl(buffer[i]) && !is_special(buffer[i])){
 					m_parse_buffer.push_back(buffer[i]);
 				} else if(buffer[i] == ':'){
-					m_parse_state = HEADER_SPACE;
+					m_parse_state = HEADER_VALUE_SPACE;
+					m_headers[m_parse_buffer] = "";
 				} else {
 					throw new Exception("Hydra->Response->Invalid Header");
 				}
 				break;
-			case HEADER_SPACE:
+			case HEADER_VALUE_SPACE:
 				if(buffer[i] == ' '){
+					
+				} else if(buffer[i] == '\r'){
+					m_parse_state = CRLF;
+				} else if(!is_ctl(buffer[i])){
+					m_headers[m_parse_buffer].push_back(buffer[i]);
 					m_parse_state = HEADER_VALUE;
 				} else {
 					throw new Exception("Hydra->Response->Invalid Header");
 				}
 				break;
 			case HEADER_VALUE:
-				if(is_ctl(buffer[i])){
-					throw new Exception("Hydra->Response->Invalid Header");
-				} else {
-					m_headers[m_parse_buffer] = buffer[i];
-					m_parse_state = HEADER_VALUE_CHAR;
-				}
-				break;
-			case HEADER_VALUE_CHAR:
 				if(buffer[i] == '\r'){
 					m_parse_state = CRLF;
-				} else if(is_ctl(buffer[i])){
-					throw new Exception("Hydra->Response->Invalid Header");
-				} else {
+				} else if(!is_ctl(buffer[i])){
 					m_headers[m_parse_buffer].push_back(buffer[i]);
+				} else {
+					throw new Exception("Hydra->Response->Invalid Header");
 				}
 				break;
 			case FINAL_CRLF:

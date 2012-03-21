@@ -212,36 +212,31 @@ bool Hydra::Request::parse_header(const char& in){
 			if(is_char(in) && !is_ctl(in) && !is_special(in)){
 				m_buffer.push_back(in);
 			} else if(in == ':'){
-				m_header_state = HEADER_SPACE;
+				m_header_state = HEADER_VALUE_SPACE;
+				m_headers[m_buffer] = "";
+				m_header_order.push_back(m_buffer);
 			} else {
 				throw new Exception("Invalid header in HTTP Request");
 			}
 
 			break;
 
-		case HEADER_SPACE:
+		case HEADER_VALUE_SPACE:
 
 			if(in == ' '){
+				
+			} else if(in == '\r'){
+				m_header_state = CRLF;
+			} else if(!is_ctl(in)){
+				m_headers[m_buffer].push_back(in);
 				m_header_state = HEADER_VALUE;
-			} else { 
+			} else {
 				throw new Exception("Invalid header in HTTP Request");
 			}
 
 			break;
 
 		case HEADER_VALUE:
-
-			if(is_ctl(in)){
-				throw new Exception("Invalid header in HTTP Request");
-			} else {
-				m_header_order.push_back(m_buffer);
-				m_headers[m_buffer] = in;
-				m_header_state = HEADER_VALUE_CHAR;
-			}
-
-			break;
-
-		case HEADER_VALUE_CHAR:
 
 			if(in == '\r'){
 				m_header_state = CRLF;
