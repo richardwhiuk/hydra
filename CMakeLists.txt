@@ -37,6 +37,7 @@ set(HEADER_FILES
 	include/config.hpp
 	include/connection.hpp
 	include/client.hpp
+	include/client/http.hpp
 	include/client/plain.hpp
 	include/client/ssl.hpp
 	include/daemon.hpp
@@ -57,6 +58,7 @@ set(SOURCE_FILES
 	src/config.cpp
 	src/connection.cpp
 	src/client.cpp
+	src/client/http.cpp
 	src/client/plain.cpp
 	src/client/ssl.cpp
 	src/daemon.cpp

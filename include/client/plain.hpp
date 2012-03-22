@@ -12,6 +12,7 @@
 #define HYDRA_FILE_CLIENT_PLAIN
 
 #include "client.hpp"
+#include "client/http.hpp"
 #include "config.hpp"
 
 #include "connection.hpp"
@@ -27,16 +28,68 @@ namespace Hydra {
 
 namespace Client {
 
-class Plain : public Base {
+class Plain : public Client::HTTP {
 
 public:
 
 	Plain(std::string name, Config::Section config, Daemon& hydra);
 	virtual ~Plain();
 
-	virtual void run(boost::asio::io_service& io_service);
+	class Socket : public HTTP::Socket {
 
-	class Connection : public boost::enable_shared_from_this<Connection> {
+	public:
+
+		Socket(boost::asio::io_service& io) : _(io){
+
+		}
+
+		boost::asio::ip::tcp::socket& base(){
+			return _;
+		}
+
+		virtual void close(){
+			_.close();
+		}
+
+		virtual void cancel(){
+			_.cancel();
+		}
+
+		virtual void async_read(
+			boost::asio::mutable_buffers_1 mb, 
+			boost::asio::detail::transfer_at_least_t cc, 
+			boost::function<void(const boost::system::error_code& ec, unsigned int bytes)> rh){
+
+			boost::asio::async_read(_,mb,cc,rh);
+		}
+
+		virtual void async_write(
+			boost::asio::const_buffers_1 cb, 
+			boost::function<void(const boost::system::error_code& ec, unsigned int bytes)> rh){
+
+			boost::asio::async_write(_,cb,rh);
+		}
+
+		virtual void async_write(
+			boost::asio::const_buffers_1 cb, 
+			boost::asio::detail::transfer_at_least_t cc, 
+			boost::function<void(const boost::system::error_code& ec, unsigned int bytes)> rh){
+
+			boost::asio::async_write(_,cb,cc,rh);
+		}
+
+		virtual std::string remote_address(){
+			return _.remote_endpoint().address().to_string();
+		}
+
+	private:
+
+		boost::asio::ip::tcp::socket _;
+
+
+	};
+
+	class Connection : public HTTP::Connection {
 
 	public:
 
@@ -45,69 +98,19 @@ public:
 		static pointer Create(boost::asio::io_service& io_service, Daemon& hydra, std::string& tag);
 		~Connection();
 
-		void start();
-	
-		boost::asio::ip::tcp::socket& socket();
-	
-	private:
+		virtual Plain::Socket& socket();
+
+	protected:
 
 		Connection(boost::asio::io_service& io_service, Daemon& hydra, std::string& tag);
 
-		void timeout(boost::posix_time::time_duration time);
-
-		void handle_timeout(const boost::system::error_code& e);
-
-		void read();
-
-		void handle_read(const boost::system::error_code& e, std::size_t bytes_transferred);
-
-		void consume();
-
-		void write_start();
-
-		void write();
-
-		void handle_write(const boost::system::error_code& e, std::size_t bytes_transferred);
-
-		void finish();
-
-		void handle_finish(const boost::system::error_code& e, std::size_t bytes_transferred);
-
-		Hydra::Connection::pointer m_connection;
-
-		Daemon& m_hydra;
-
-		boost::array<char, 8192> m_buffer_in;
-
-		size_t m_bytes_start; // Position in buffer
-
-		size_t m_bytes_total; // Valid bytes in buffer
-
-		std::string m_buffer_out;
-
-		std::string& m_tag;
-
-		boost::asio::ip::tcp::socket m_socket;
-
-		bool m_persistent; // Persistent connection
-
-		boost::asio::deadline_timer m_timer;	// Prevent client's from holding on to sockets forever.
-
-		int m_read_timeout;	// Read timeout
-
-		int m_write_timeout;	// Write timeout
+		Plain::Socket m_socket;
 	
 	};
 
-private:
+protected:
 
-	void accept();
-
-	void handle(Connection::pointer connect, const boost::system::error_code& error);
-
-	boost::asio::ip::tcp::acceptor* m_accept;
-
-	std::string m_tag;
+	virtual void accept();
 
 };
 

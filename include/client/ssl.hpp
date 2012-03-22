@@ -12,6 +12,7 @@
 #define HYDRA_FILE_CLIENT_SSL
 
 #include "client.hpp"
+#include "client/plain.hpp"
 #include "config.hpp"
 #include "connection.hpp"
 
@@ -26,7 +27,7 @@ namespace Hydra {
 
 namespace Client {
 
-class SSL : public Client::Base {
+class SSL : public Client::HTTP {
 
 public:
 
@@ -35,7 +36,68 @@ public:
 
 	virtual void run(boost::asio::io_service&);
 
-	class Connection : public boost::enable_shared_from_this<Connection> {
+	class Socket : public HTTP::Socket {
+
+	public:
+
+		Socket(boost::asio::io_service& io, boost::asio::ssl::context& context) : _(io, context){
+
+		}
+
+		boost::asio::ssl::stream<boost::asio::ip::tcp::socket>::lowest_layer_type& base(){
+			return _.lowest_layer();
+		}
+
+		virtual void close(){
+			_.lowest_layer().close();
+		}
+
+		virtual void cancel(){
+			_.lowest_layer().cancel();
+		}
+
+		virtual void async_handshake(
+			boost::asio::ssl::stream<boost::asio::ip::tcp::socket>::handshake_type ht, 
+			boost::function<void(const boost::system::error_code& ec)> rh){
+
+			_.async_handshake(ht,rh);
+		}
+
+		virtual void async_read(
+			boost::asio::mutable_buffers_1 mb, 
+			boost::asio::detail::transfer_at_least_t cc, 
+			boost::function<void(const boost::system::error_code& ec, unsigned int bytes)> rh){
+
+			boost::asio::async_read(_,mb,cc,rh);
+		}
+
+		virtual void async_write(
+			boost::asio::const_buffers_1 cb, 
+			boost::function<void(const boost::system::error_code& ec, unsigned int bytes)> rh){
+
+			boost::asio::async_write(_,cb,rh);
+		}
+
+		virtual void async_write(
+			boost::asio::const_buffers_1 cb, 
+			boost::asio::detail::transfer_at_least_t cc, 
+			boost::function<void(const boost::system::error_code& ec, unsigned int bytes)> rh){
+
+			boost::asio::async_write(_,cb,cc,rh);
+		}
+
+		virtual std::string remote_address(){
+			return _.lowest_layer().remote_endpoint().address().to_string();
+		}
+
+	private:
+		
+		boost::asio::ssl::stream<boost::asio::ip::tcp::socket> _;
+		
+
+	};
+
+	class Connection : public HTTP::Connection { //, public boost::enable_shared_from_this<Connection> {
 
 	public:
 
@@ -46,8 +108,13 @@ public:
 
 		void start();
 
-		boost::asio::ssl::stream<boost::asio::ip::tcp::socket>::lowest_layer_type& socket();
-		
+		SSL::Socket& socket();
+
+		boost::shared_ptr<Connection> shared_from_this(){
+			return boost::static_pointer_cast<Connection>(HTTP::Connection::shared_from_this());
+		}
+
+
 	private:
 
 		Connection(boost::asio::io_service& io_service, Daemon& hydra, boost::asio::ssl::context& context, std::string& tag);
@@ -56,41 +123,7 @@ public:
 
 		void handle_handshake(const boost::system::error_code& e);
 
-		void begin();
-
-		void read();
-
-		void handle_read(const boost::system::error_code& e, std::size_t bytes_transferred);
-
-		void consume();
-
-		void write_start();
-
-		void write();
-
-		void handle_write(const boost::system::error_code& e, std::size_t bytes_transferred);
-
-		void finish();
-
-		void handle_finish(const boost::system::error_code& e, std::size_t bytes_transferred);
-
-		Hydra::Connection::pointer m_connection;
-
-		Daemon& m_hydra;
-
-		boost::array<char, 8192> m_buffer_in;
-
-		size_t m_bytes_start; // Position in buffer
-
-		size_t m_bytes_total; // Valid bytes in buffer
-
-		std::string m_buffer_out;
-
-		boost::asio::ssl::stream<boost::asio::ip::tcp::socket> m_socket;
-
-		std::string& m_tag;
-
-		bool m_persistent;
+		SSL::Socket m_socket;
 
 	};
 
@@ -98,12 +131,7 @@ protected:
 
 	void accept();
 
-	void handle(Connection::pointer connect, const boost::system::error_code& error);
-
-	boost::asio::ip::tcp::acceptor* m_accept;
 	boost::asio::ssl::context* m_context;
-
-	std::string m_tag;
 
 };
 
