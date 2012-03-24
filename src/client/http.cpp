@@ -118,6 +118,8 @@ void Hydra::Client::HTTP::Connection::begin(){
 	
 	m_persistent = false;
 
+	m_address = socket().remote_address();
+
 	if(m_bytes_total > m_bytes_start){
 		consume();
 	} else {
@@ -221,7 +223,7 @@ void Hydra::Client::HTTP::Connection::consume(){
 
 	try {
 		std::string header = m_connection->request().header("X-Forwarded-For");
-		header += ", " + socket().remote_address();
+		header += ", " + m_address;
 
 	} catch(Exception* e){
 
@@ -229,7 +231,7 @@ void Hydra::Client::HTTP::Connection::consume(){
 
 		try {
 
-			m_connection->request().header("X-Forward-For", socket().remote_address());
+			m_connection->request().header("X-Forward-For", m_address);
 
 		} catch(Exception* e){
 
@@ -333,7 +335,7 @@ void Hydra::Client::HTTP::Connection::handle_finish(const boost::system::error_c
 		{
 			boost::shared_ptr<Hydra::Log> access = Log::access();
 
-			(*access) 	<< "[" << socket().remote_address()
+			(*access) 	<< "[" << m_address
 					<< "] [" << m_tag
 					<< "] [" << m_connection->request().method()
 					<< "] [";

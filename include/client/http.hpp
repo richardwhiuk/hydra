@@ -126,6 +126,8 @@ public:
 
 		int m_write_timeout;	// Write timeout
 
+		std::string m_address;  // Client address
+
 	};
 
 protected:
