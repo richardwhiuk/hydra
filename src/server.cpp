@@ -13,6 +13,7 @@
 #include "server/proxy.hpp"
 #include "server/sslproxy.hpp"
 #include "server/apache2.hpp"
+#include "server/redirect.hpp"
 
 #include "exception.hpp"
 
@@ -37,6 +38,10 @@ Hydra::Server::Base* Hydra::Server::Create(std::string name, Hydra::Config::Sect
 	} else if(config.value("type") == "apache2"){
 
 		return new Hydra::Server::Apache2(name, config, hydra);
+
+	} else if(config.value("type") == "redirect"){
+
+		return new Hydra::Server::Redirect(name, config, hydra);
 
 	} else {
 
