@@ -11,6 +11,7 @@
 #include "server/apache2.hpp"
 
 #include "daemon.hpp"
+#include "utility.hpp"
 
 #include <errno.h>
 #include <sys/stat.h>
@@ -172,13 +173,6 @@ void Hydra::Server::Apache2::handle(Hydra::Connection::pointer connection){
 		throw new Exception("Hydra->Server->Apache2->Unknown connection type");
 	}
 
-}
-
-// Only use this if we are going to fork as it's pretty difficult to clear up the resulting corruption.
-
-void strmasscpy(char** dst, size_t place, const std::string src){
-	dst[place] = new char[src.size() + 1];
-	std::strcpy(dst[place], src.c_str());
 }
 
 void Hydra::Server::Apache2::signal(std::string signal){
