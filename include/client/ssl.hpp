@@ -87,7 +87,17 @@ public:
 		}
 
 		virtual std::string remote_address(){
-			return _.lowest_layer().remote_endpoint().address().to_string();
+			try {
+				if(_.lowest_layer().remote_endpoint().address().is_v4()){
+					return _.lowest_layer().remote_endpoint().address().to_v4().to_string();
+				} else if(_.lowest_layer().remote_endpoint().address().is_v6()){
+					return _.lowest_layer().remote_endpoint().address().to_v6().to_string();
+				}	
+			} catch(boost::system::system_error& e){
+				
+			}
+
+			return "";	// Error resolving - abort.
 		}
 
 	private:
