@@ -29,6 +29,8 @@ public:
 
 	int code();
 
+	void code(int);
+
 	void header(const std::string& key, const std::string& value);
 
 	void error(int code);
