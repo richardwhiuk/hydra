@@ -49,6 +49,7 @@ set(HEADER_FILES
 	include/response.hpp
 	include/server.hpp
 	include/server/apache2.hpp
+	include/server/nginx.hpp
 	include/server/proxy.hpp
 	include/server/sslproxy.hpp
 	include/server/redirect.hpp
@@ -73,6 +74,7 @@ set(SOURCE_FILES
 	src/response.cpp
 	src/server.cpp
 	src/server/apache2.cpp
+	src/server/nginx.cpp
 	src/server/proxy.cpp
 	src/server/sslproxy.cpp
 	src/server/redirect.cpp

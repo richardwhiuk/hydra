@@ -14,6 +14,7 @@
 #include "server/sslproxy.hpp"
 #include "server/apache2.hpp"
 #include "server/redirect.hpp"
+#include "server/nginx.hpp"
 
 #include "exception.hpp"
 
@@ -42,6 +43,10 @@ Hydra::Server::Base* Hydra::Server::Create(std::string name, Hydra::Config::Sect
 	} else if(config.value("type") == "redirect"){
 
 		return new Hydra::Server::Redirect(name, config, hydra);
+
+	} else if(config.value("type") == "nginx"){
+
+		return new Hydra::Server::Nginx(name, config, hydra);
 
 	} else {
 
