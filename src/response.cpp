@@ -32,6 +32,10 @@ void Hydra::Response::code(int code){
 	m_code = code;
 }
 
+void Hydra::Response::version(std::string version){
+	m_version = version;
+}
+
 void Hydra::Response::header(const std::string& key, const std::string& value){
 
 	m_headers[key] = value;

@@ -31,6 +31,8 @@ public:
 
 	void code(int);
 
+	void version(std::string);
+
 	void header(const std::string& key, const std::string& value);
 
 	void error(int code);
