@@ -292,6 +292,12 @@ std::list<std::string> Hydra::Config::Section::values_tag(const std::string& key
 
 }
 
+std::map<std::string, std::list<std::string> > Hydra::Config::Section::tagged_values(const std::string& key){
+
+	return m_values[key];
+
+}
+
 std::ostream& Hydra::operator<< (std::ostream& o, Hydra::Config const& config){
 
 	for(std::map<std::string, Hydra::Config::Section>::const_iterator it = config.m_sections.begin(); it != config.m_sections.end(); ++it){
