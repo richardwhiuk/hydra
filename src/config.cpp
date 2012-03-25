@@ -172,12 +172,12 @@ void Hydra::Config::parse(const std::string& filename){
 		if(type == SECTION && ( mode == SECTION_END || mode == COMMENT ) ){
 			// Valid section
 
-			section = line.substr(a,b);
+			section = line.substr(a,b - a);
 
 		} else if(type == VALUE && ( mode == COMMENT || mode == VALUE_CHAR ) ){
 			// Valid key value pair
 
-			data[section].value(line.substr(a,b),line.substr(c,d));
+			data[section].value(line.substr(a,b - a),line.substr(c,d - c));
 
 		} else if(type == NONE){
 			// Valid open line.
