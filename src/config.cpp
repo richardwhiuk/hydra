@@ -54,6 +54,7 @@ enum ParserMode {
 	SECTION_CHAR_RBRACE,
 	SECTION_END,
 	KEY_CHAR,
+	TAG_CHAR,
 	VALUE_CHAR_START,
 	VALUE_CHAR,
 	COMMENT
@@ -89,7 +90,7 @@ void Hydra::Config::parse(const std::string& filename){
 	
 		getline(file, line);
 
-		size_t a,b,c,d;
+		size_t a,b,c,d,e,f;
 
 		for(size_t i = 0; i < line.length() && mode != COMMENT; ++i){
 
@@ -110,7 +111,7 @@ void Hydra::Config::parse(const std::string& filename){
 					type = VALUE;
 					mode = KEY_CHAR;
 					a = i;
-					b = i + 1;
+					e = f = b = i + 1;
 				}
 			} else if(mode == SECTION_CHAR) {
 				if( x == ']'){
@@ -140,11 +141,22 @@ void Hydra::Config::parse(const std::string& filename){
 			} else if(mode == KEY_CHAR){
 				if(x == '='){
 					mode = VALUE_CHAR_START;
+				} else if(x == ':'){
+					mode = TAG_CHAR;
+					e = f = i + 1;
 				} else if(x == '\r' || x == '\n' || x == '\t' || x == ' '){
 					// Skip
 					// will be included if we have more text - this allows us to have 'a b' = 'c d'
 				} else {
-					b = i + 1;
+					e = f = b = i + 1;
+				}
+			} else if(mode == TAG_CHAR){
+				if(x == '='){
+					mode = VALUE_CHAR_START;
+				} else if(x == '\r' || x == '\n' || x == '\t' || x == ' '){
+					// Skip
+				} else {
+					f = i + 1;
 				}
 			} else if(mode == VALUE_CHAR_START){
 				if(x == '\r' || x == '\n' || x == ' ' || x == '\t'){
@@ -177,7 +189,7 @@ void Hydra::Config::parse(const std::string& filename){
 		} else if(type == VALUE && ( mode == COMMENT || mode == VALUE_CHAR ) ){
 			// Valid key value pair
 
-			data[section].value(line.substr(a,b - a),line.substr(c,d - c));
+			data[section].value(line.substr(a,b - a),line.substr(c,d - c), line.substr(e, f -e));
 
 		} else if(type == NONE){
 			// Valid open line.
@@ -230,10 +242,10 @@ Hydra::Config::Section::~Section(){
 
 }
 
-void Hydra::Config::Section::value(std::string key, std::string value){
+void Hydra::Config::Section::value(std::string key, std::string value, std::string tag){
 	// Set key => value
 
-	std::list<std::string>& values = m_values[key];
+	std::list<std::string>& values = m_values[key][tag];
 
 	values.push_front(value);
 }
@@ -241,14 +253,13 @@ void Hydra::Config::Section::value(std::string key, std::string value){
 std::string Hydra::Config::Section::value(std::string key){
 	// Return single value	
 
-	std::list<std::string>& values = m_values[key];
+	std::list<std::string>& values = m_values[key][""];
 
 	if(values.empty()){
 
 		throw new Hydra::Exception(std::string("Hydra->Config->Section->Key not found: ").append(key));
 
 	}
-
 
 	return values.front();
 
@@ -257,33 +268,27 @@ std::string Hydra::Config::Section::value(std::string key){
 std::list<std::string> Hydra::Config::Section::values(const std::string key){
 	// Return [key]
 	
-	return m_values[key];
+	return m_values[key][""];
 
 }
 
 std::string Hydra::Config::Section::value_tag(const std::string& key, const std::string& tag){
 
-	try {
+	std::list<std::string>& values = m_values[key][tag];
+
+	if(values.empty()){
+
 		return value(key);
-	} catch(Exception* e){
-		delete e;
-		return value(key + ":" + tag);
+
 	}
+
+	return values.front();
 
 }
 
 std::list<std::string> Hydra::Config::Section::values_tag(const std::string& key, const std::string& tag){
 
-	std::list<std::string> result = values(key);
-
-	if(!result.empty()){
-		return result;
-
-	} else {
-
-		return values(key + ":" + tag);
-
-	}
+	return m_values[key][tag];
 
 }
 
@@ -292,15 +297,19 @@ std::ostream& Hydra::operator<< (std::ostream& o, Hydra::Config const& config){
 	for(std::map<std::string, Hydra::Config::Section>::const_iterator it = config.m_sections.begin(); it != config.m_sections.end(); ++it){
 		o << std::endl << it->first << " => " << it->second;
 	}
+
 	return o; 
 }
 
 std::ostream& Hydra::operator<< (std::ostream& o, Hydra::Config::Section const& section){
 	
-	for(std::map<std::string, std::list<std::string> >::const_iterator it = section.m_values.begin(); it != section.m_values.end(); ++it){
+	for(std::map<std::string, std::map<std::string, std::list<std::string> > >::const_iterator it = section.m_values.begin(); it != section.m_values.end(); ++it){
 		o << std::endl << '\t' << it->first << " => ";
-		for(std::list<std::string>::const_iterator sit = it->second.begin(); sit != it->second.end(); ++sit){
-			o << std::endl << "\t\t" << *sit;
+		for(std::map<std::string, std::list<std::string> >::const_iterator sit = it->second.begin(); sit != it->second.end(); ++sit){
+			o << std::endl << "\t\t" << sit->first << " => ";
+			for(std::list<std::string>::const_iterator tit = sit->second.begin(); tit != sit->second.end(); ++sit){
+				o << std::endl << "\t\t\t" << *tit;
+			}
 		}
 	}
 

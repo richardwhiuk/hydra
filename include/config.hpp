@@ -32,7 +32,7 @@ public:
 		Section();
 		~Section();
 
-		void value(const std::string, const std::string);
+		void value(const std::string, const std::string, const std::string);
 		std::string value(const std::string);
 		std::list<std::string> values(const std::string);
 
@@ -41,7 +41,7 @@ public:
 
 	private:
 
-		std::map<std::string, std::list<std::string> > m_values;
+		std::map<std::string, std::map<std::string, std::list<std::string> > > m_values;
 
 	};
 
