@@ -167,7 +167,7 @@ void Hydra::Daemon::handle(Hydra::Connection::pointer connection){
 
 		host = host.substr(0, colon);
 
-		connection->request().header(host);
+		connection->request().header("Header", host);
 
 	}
 
