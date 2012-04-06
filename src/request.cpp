@@ -12,7 +12,7 @@
 
 #include <sstream>
 
-Hydra::Request::Request() : m_header_state(START), m_header_done(false), m_content(""){
+Hydra::Request::Request() : m_header_state(START), m_header_done(false), m_content(""), m_transfer_chunked(CHUNKED_NONE){
 
 }
 
@@ -275,6 +275,15 @@ bool Hydra::Request::parse_content(){
 		std::istringstream( m_headers["Content-Length"] ) >> m_content_bytes;
 
 		return true;
+
+	} else if(m_headers.find("Transfer-Encoding") != m_headers.end() && m_headers["Transfer-Encoding"] == "chunked"){
+
+		m_content_bytes = 0;
+
+		m_transfer_chunked = CHUNKED_HEADER;
+		
+		return true;
+
 	}
 
 
@@ -284,11 +293,104 @@ bool Hydra::Request::parse_content(){
 
 bool Hydra::Request::parse_content(const char& in){
 
-	m_content.push_back(in);
+	switch(m_transfer_chunked){
 
-	m_content_bytes --;
+		case CHUNKED_NONE:
 
-	return (m_content_bytes == 0);
+			m_content.push_back(in);
+
+			m_content_bytes --;
+
+			return (m_content_bytes == 0);
+
+		case CHUNKED_HEADER:
+
+			if(in == '\r'){
+
+				m_transfer_chunked = CHUNKED_HEADER_CRLF;
+
+			} else if(in >= '0' && in <= '9'){
+
+				m_content_bytes = (m_content_bytes * 16) + (in - '0');
+
+			} else if(in >= 'A' && in <= 'F'){
+
+				m_content_bytes = (m_content_bytes * 16) + (in - 'A' + 10);
+
+			} else if(in >= 'a' && in <= 'f'){
+
+				m_content_bytes = (m_content_bytes * 16) + (in - 'a' + 10);
+
+			} else {
+	
+				throw new Exception("Unknown chunk header");
+	
+			}
+
+			return false;
+
+		case CHUNKED_HEADER_CRLF:
+
+			if(in == '\n'){
+
+				if(m_content_bytes == 0){
+					return true;
+				} else {
+					m_transfer_chunked = CHUNKED_DATA;
+				}
+
+			} else {
+
+				throw new Exception("Unknown chunk header - expected new line.");
+
+			}
+
+			return false;
+
+		case CHUNKED_DATA:
+
+			m_content_bytes --;
+
+			m_content.push_back(in);
+
+			if(m_content_bytes == 0){
+
+				m_transfer_chunked = CHUNKED_DATA_CR;
+
+			}
+
+			return false;
+
+		case CHUNKED_DATA_CR:
+
+			if(in == '\r'){
+
+				m_transfer_chunked = CHUNKED_DATA_CRLF;
+
+			} else {
+
+				throw new Exception("Unknown chunk data terminator - expected carriage return");
+
+			}
+
+			return false;
+
+		case CHUNKED_DATA_CRLF:
+
+			if(in == '\n'){
+
+				m_transfer_chunked = CHUNKED_HEADER;
+
+			} else {
+
+				throw new Exception("Unknown chunk data terminator - expected carriage return");
+
+			}
+
+			return false;
+
+	}
+
 
 }
 

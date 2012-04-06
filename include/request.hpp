@@ -68,11 +68,22 @@ private:
 		DONE
 	};
 
+	enum ChunkedParserState {
+		CHUNKED_NONE,
+		CHUNKED_HEADER,
+		CHUNKED_HEADER_CRLF,
+		CHUNKED_DATA,
+		CHUNKED_DATA_CR,
+		CHUNKED_DATA_CRLF
+	};
+
 	HeaderParserState m_header_state;
 	bool m_header_done;
 
 	std::string m_content;
 	size_t m_content_bytes;
+
+	ChunkedParserState m_transfer_chunked;
 
 	std::string m_method;
 	std::string m_path;
