@@ -58,13 +58,29 @@ Hydra::Server::Base* Hydra::Server::Create(std::string name, Hydra::Config::Sect
 
 void Hydra::Server::Base::hosts(HostMap& map){
 
-	std::list<std::string> hosts = m_config.values("host");
+	std::map<std::string, std::list<std::string> > tagged;
+
+	std::map<std::string, std::list<std::string> > hosts = m_config.tagged_values("host");
 
 	std::list<std::string> tags = m_config.values("tag");
 
-	for(std::list<std::string>::iterator it = hosts.begin(); it != hosts.end(); ++it){
+	for(std::map<std::string, std::list<std::string> >::iterator it = hosts.begin(); it != hosts.end(); ++it){
 
-		map.add(*it, tags, this);
+		for(std::list<std::string>::iterator sit = it->second.begin(); sit != it->second.end(); ++sit){
+
+			if(it->first == ""){
+				tagged[*sit] = tags;
+			} else {
+				tagged[*sit].push_back(it->first);	
+			}
+
+		}
+
+	}
+
+	for(std::map<std::string, std::list<std::string> >::iterator it = tagged.begin(); it != tagged.end(); ++it){
+
+		map.add(it->first, it->second, this);
 
 	}
 
