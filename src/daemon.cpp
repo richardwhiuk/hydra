@@ -15,6 +15,8 @@
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 
+#include <signal.h>
+
 Hydra::Daemon::Daemon(){
 
 }
