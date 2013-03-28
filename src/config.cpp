@@ -124,7 +124,7 @@ void Hydra::Config::parse(const std::string& filename){
 			} else if(mode == SECTION_CHAR_RBRACE) {
                                 if( x == ']'){
 					mode = SECTION_END;
-					b = i - 1;
+					b = i;
                                 } else if(x == '\r' || x == '\n' || x == '\t' || x == ' ') {
                                         throw new Hydra::Exception(std::string("Hydra->Config->Invalid character in section label in configuration file: ").append(filename));
                                 } else {
