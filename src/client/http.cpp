@@ -283,6 +283,12 @@ void Hydra::Client::HTTP::Connection::write(){
 
 	m_connection->response().read_buffer(m_buffer_out);
 
+	write_data();
+
+}
+
+void Hydra::Client::HTTP::Connection::write_data(){
+
 	// Async write
 
 	timeout(boost::posix_time::seconds(m_write_timeout));
@@ -301,12 +307,20 @@ void Hydra::Client::HTTP::Connection::handle_write(const boost::system::error_co
 
 		m_timer.cancel();
 
-		m_connection->response().read();
+		if (bytes_transferred != m_buffer_out.length())
+		{
+			m_buffer_out = m_buffer_out.substr(bytes_transferred);
 
-	} else {
-
+			write_data();
+		}
+		else
+		{
+			m_connection->response().read();
+		}
+	}
+	else
+	{
 		m_connection.reset();
-
 	}
 
 }
