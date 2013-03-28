@@ -31,7 +31,7 @@ Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config,
 	// Does the configuration file exist
 
 	if(eaccess(m_config_file.c_str(), R_OK | F_OK)){
-		throw new Exception("Hydra->Server->Apache->Configuration file not found");
+		throw new Exception("Hydra->Server->Apache->Configuration file not found [" + m_config_file + "]");
 	}
 
 	// Can we execute apache?
@@ -60,11 +60,13 @@ Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config,
 		int result = getpwnam_r(user.c_str(), &data, buffer, bufsize, &ptr);
 
 		if(result != 0){
-			throw new Exception("Hydra->Server->Apache2->User data lookup failed");
+			std::string message = "Hydra->Server->Apache2->User data lookup failed";
+			throw new Exception(message + name);
 		}
 
 		if(ptr == 0){
-			throw new Exception("Hydra->Server->Apache2->User not found");
+			std::string message = "Hydra->Server->Apache2->User not found for: ";
+			throw new Exception(message + name);
 		}
 
 		m_uid = ptr->pw_uid;
