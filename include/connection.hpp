@@ -33,6 +33,8 @@ public:
 
 	const std::string& tag();
 
+	void bind_finish(boost::function<void(Hydra::Connection::pointer)>);
+
 private:
 
 	Connection(std::string tag);
@@ -41,6 +43,8 @@ private:
 	Response m_response;
 
 	std::string m_tag;
+
+	boost::function<void(Hydra::Connection::pointer)> m_finish;
 
 };
 

@@ -10,12 +10,16 @@
 
 #include "connection.hpp"
 
-Hydra::Connection::Connection(std::string tag) : m_request(), m_response(), m_tag(tag){
+Hydra::Connection::Connection(std::string tag) : m_request(), m_response(), m_tag(tag), m_finish(NULL){
 	
 }
 
-Hydra::Connection::~Connection(){
-	
+Hydra::Connection::~Connection()
+{
+	if (m_finish)
+	{
+		m_finish(shared_from_this());
+	}
 }
 
 Hydra::Connection::pointer Hydra::Connection::Create(std::string tag){
@@ -32,5 +36,10 @@ Hydra::Response& Hydra::Connection::response(){
 
 const std::string& Hydra::Connection::tag(){
 	return m_tag;
+}
+
+void Hydra::Connection::bind_finish(boost::function<void(Hydra::Connection::pointer)> finish)
+{
+	m_finish = finish;
 }
 
