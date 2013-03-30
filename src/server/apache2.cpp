@@ -13,6 +13,7 @@
 #include "daemon.hpp"
 #include "utility.hpp"
 
+#include <boost/bind.hpp>
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -158,23 +159,48 @@ void Hydra::Server::Apache2::handle(Hydra::Connection::pointer connection){
 
 	// If we aren't yet running the server, we really should.
 
-	if(!m_started){
+	try
+	{
+		// Protect against the server dieing while we have a live connection
 
-		signal("start");
+		m_live ++;
 
-		m_started = true;
+		if (!m_started)
+		{
+			signal("start");
+
+			m_started = true;
+		}
+
+		std::string type = m_config.value_tag("connection", connection->tag());
+
+		connection->bind_finish(boost::bind(&Apache2::release, this, _1));
+
+		if(type == "plain")
+		{
+			plain.handle(connection);
+		}
+		else if(type == "ssl")
+		{
+			ssl.handle(connection);
+		}
+		else
+		{
+			throw new Exception("Hydra->Server->Apache2->Unknown connection type");
+		}
 	}
-
-	std::string type = m_config.value_tag("connection", connection->tag());
-
-	if(type == "plain"){
-		plain.handle(connection);
-	} else if(type == "ssl"){
-		ssl.handle(connection);
-	} else {
-		throw new Exception("Hydra->Server->Apache2->Unknown connection type");
+	catch(...)
+	{
+		// If for any reason we fail to handle the connection, we need to forget about
+		// this live connection.
+		m_live --;
+		throw;
 	}
+}
 
+void Hydra::Server::Apache2::release(Hydra::Connection::pointer connection)
+{
+	m_live --;
 }
 
 void Hydra::Server::Apache2::signal(std::string signal){

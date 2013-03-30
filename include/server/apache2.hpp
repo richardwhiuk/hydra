@@ -31,6 +31,8 @@ public:
 
 	virtual void handle(Hydra::Connection::pointer connection);
 
+	void release(Hydra::Connection::pointer connection);
+
 	void mkdirs();
 
 private:
@@ -51,6 +53,9 @@ private:
 
 	std::string m_group;
 	gid_t m_gid;
+
+        // Number of live connections
+	uint32_t m_live;
 
 };
 
