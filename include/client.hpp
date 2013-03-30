@@ -31,6 +31,8 @@ public:
 
 	virtual void run(boost::asio::io_service& io_service) = 0;
 
+	virtual ~Base() = 0;
+
 protected:
 
 	Config::Section m_config;
