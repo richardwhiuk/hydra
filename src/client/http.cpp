@@ -251,6 +251,8 @@ void Hydra::Client::HTTP::Connection::consume(){
 
 	} catch(Exception* e){
 
+		std::cerr << e->what() << std::endl;
+
 		delete e;
 
 		m_connection->response().error(404);
