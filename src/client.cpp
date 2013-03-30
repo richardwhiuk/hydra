@@ -16,7 +16,7 @@
 #include "client/ssl.hpp"
 
 Hydra::Client::Base::Base(std::string name, Config::Section config, Daemon& hydra) : m_config(config), m_hydra(hydra){
-	
+
 }
 
 Hydra::Client::Base* Hydra::Client::Create(std::string name, Config::Section config, Daemon& hydra){
@@ -34,6 +34,11 @@ Hydra::Client::Base* Hydra::Client::Create(std::string name, Config::Section con
 		throw new Exception(std::string("Hydra->Client->Unknown client type: ").append(config.value("type")));
 
 	}
+
+}
+
+Hydra::Client::Base::~Base()
+{
 
 }
 
