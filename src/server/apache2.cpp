@@ -21,7 +21,7 @@
 #include <grp.h>
 #include <unistd.h>
 
-Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config, Hydra::Daemon& daemon) : Base(name, config, daemon), plain(name, config, daemon), ssl(name, config, daemon), m_started(false){
+Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config, Hydra::Daemon& daemon) : Base(name, config, daemon), plain(name, config, daemon), ssl(name, config, daemon), m_started(false), m_live(0){
 
 	// Setup ready to start Apache2.
 
