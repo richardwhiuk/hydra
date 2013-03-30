@@ -18,7 +18,7 @@ Hydra::Connection::~Connection()
 {
 	if (m_finish)
 	{
-		m_finish(shared_from_this());
+		m_finish(this);
 	}
 }
 
@@ -38,7 +38,7 @@ const std::string& Hydra::Connection::tag(){
 	return m_tag;
 }
 
-void Hydra::Connection::bind_finish(boost::function<void(Hydra::Connection::pointer)> finish)
+void Hydra::Connection::bind_finish(boost::function<void(Hydra::Connection*)> finish)
 {
 	m_finish = finish;
 }

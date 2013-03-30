@@ -33,7 +33,7 @@ public:
 
 	const std::string& tag();
 
-	void bind_finish(boost::function<void(Hydra::Connection::pointer)>);
+	void bind_finish(boost::function<void(Hydra::Connection*)>);
 
 private:
 
@@ -44,7 +44,7 @@ private:
 
 	std::string m_tag;
 
-	boost::function<void(Hydra::Connection::pointer)> m_finish;
+	boost::function<void(Hydra::Connection*)> m_finish;
 
 };
 
