@@ -85,5 +85,5 @@ add_executable(hydra ${HEADER_FILES} ${SOURCE_FILES})
 
 target_link_libraries(hydra ${HYDRA_LIBS})
 
-INSTALL(TARGETS hydra DESTINATION /usr/sbin)
+INSTALL(TARGETS hydra DESTINATION /usr/local/sbin)
 

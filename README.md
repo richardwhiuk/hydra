@@ -20,7 +20,7 @@ cmake ..
 make
 make install
 
-At this point, there is a copy of the hydra daemon - /usr/sbin/hydra.
+At this point, there is a copy of the hydra daemon - /usr/local/sbin/hydra.
 
 Developing
 ----------
