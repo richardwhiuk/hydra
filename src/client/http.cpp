@@ -66,7 +66,7 @@ void Hydra::Client::HTTP::handle(Connection::pointer connect, const boost::syste
 
 }
 
-Hydra::Client::HTTP::Connection::Connection(boost::asio::io_service& io_service, Daemon& hydra, std::string& tag) : m_hydra(hydra), m_tag(tag), m_timer(io_service), m_read_timeout(10), m_write_timeout(10), m_bytes_start(0), m_bytes_total(0){
+Hydra::Client::HTTP::Connection::Connection(boost::asio::io_service& io_service, Daemon& hydra, std::string& tag) : m_hydra(hydra), m_tag(tag), m_bytes_start(0), m_bytes_total(0), m_timer(io_service), m_read_timeout(10), m_write_timeout(10){
 
 }
 

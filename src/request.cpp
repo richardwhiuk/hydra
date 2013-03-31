@@ -391,6 +391,6 @@ bool Hydra::Request::parse_content(const char& in){
 
 	}
 
-
+	return false;
 }
 
