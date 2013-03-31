@@ -21,7 +21,7 @@
 #include <grp.h>
 #include <unistd.h>
 
-Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config, Hydra::Daemon& daemon) : Base(name, config, daemon), plain(name, config, daemon), ssl(name, config, daemon), m_started(false), m_live(0){
+Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config, Hydra::Daemon& daemon) : Base(name, config, daemon), plain(name, config, daemon), ssl(name, config, daemon), m_started(false), m_live(0), m_reap_timeout(60), m_timer(0){
 
 	// Setup ready to start Apache2.
 
@@ -141,6 +141,12 @@ Hydra::Server::Apache2::~Apache2(){
 
 	// Shutdown Apache2 server
 
+	if (m_timer != 0)
+	{
+		delete m_timer;
+		m_timer = 0;
+	}
+
 	if(m_started){
 		signal("stop");
 	}
@@ -148,6 +154,14 @@ Hydra::Server::Apache2::~Apache2(){
 }
 
 void Hydra::Server::Apache2::run(boost::asio::io_service& io_service){
+
+	if (m_timer != 0)
+	{
+		delete m_timer;
+		m_timer = 0;
+	}
+
+	m_timer = new boost::asio::deadline_timer(io_service);
 
 	plain.run(io_service);
 
@@ -164,11 +178,12 @@ void Hydra::Server::Apache2::handle(Hydra::Connection::pointer connection){
 		// Protect against the server dieing while we have a live connection
 
 		m_live ++;
+		cancel_timeout();
+		std::cout << "+Live: " << m_live << std::endl;
 
 		if (!m_started)
 		{
 			signal("start");
-
 			m_started = true;
 		}
 
@@ -201,6 +216,12 @@ void Hydra::Server::Apache2::handle(Hydra::Connection::pointer connection){
 void Hydra::Server::Apache2::release(Hydra::Connection::pointer connection)
 {
 	m_live --;
+
+	// Schedule a reap in the future
+	if (m_live == 0)
+	{
+		timeout(boost::posix_time::seconds(m_reap_timeout));
+	}
 }
 
 void Hydra::Server::Apache2::signal(std::string signal){
@@ -301,5 +322,37 @@ void Hydra::Server::Apache2::mkdirs(){
 		}
 	}
 
+}
+
+void Hydra::Server::Apache2::cancel_timeout()
+{
+	m_timer->cancel();
+}
+
+void Hydra::Server::Apache2::timeout(boost::posix_time::time_duration time)
+{
+	// Prevent shutdown
+	m_timer->expires_from_now(time);
+	m_timer->async_wait(
+		boost::bind(
+			&Apache2::handle_timeout,
+			this,
+			boost::asio::placeholders::error
+		)
+	);
+}
+
+void Hydra::Server::Apache2::handle_timeout(const boost::system::error_code& e)
+{
+	if (e != boost::asio::error::operation_aborted)
+	{
+		// Shutdown
+		if (m_live == 0)
+		{
+			std::cout << "Reaping Apache2" << std::endl;
+			signal("stop");
+			m_started = false;
+		}
+	}
 }
 

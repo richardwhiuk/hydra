@@ -33,6 +33,12 @@ public:
 
 	void release(Hydra::Connection* connection);
 
+	void timeout(boost::posix_time::time_duration time);
+
+	void handle_timeout(const boost::system::error_code& e);
+
+	void cancel_timeout();
+
 	void mkdirs();
 
 private:
@@ -53,6 +59,10 @@ private:
 
 	std::string m_group;
 	gid_t m_gid;
+
+	int m_reap_timeout;	// Reaper timeout
+
+	boost::asio::deadline_timer* m_timer;	// Reaper timer
 
         // Number of live connections
 	uint32_t m_live;
