@@ -27,6 +27,10 @@ public:
 	Apache2(std::string name, Config::Section config, Daemon& hydra);
 	virtual ~Apache2();
 
+	void start();
+
+	void reap(std::string reason);
+
 	virtual void run(boost::asio::io_service& io_service);
 
 	virtual void handle(Hydra::Connection::pointer connection);
@@ -63,6 +67,18 @@ private:
 	int m_reap_timeout;	// Reaper timeout
 
 	boost::asio::deadline_timer* m_timer;	// Reaper timer
+
+	float m_load_1; // Maximum load at which we will start a new server
+	float m_load_5;
+	float m_load_15;
+
+	unsigned long m_mem_start; // Amount of memory needed to start an Apache
+
+	unsigned long m_swap_start; // Amount of swap needed
+
+	unsigned long m_mem_reap; // Amount of memory needed to not reap an Apache
+
+	unsigned long m_swap_reap; // Amount of swap need to not reap an Apache
 
         // Number of live connections
 	uint32_t m_live;

@@ -20,8 +20,23 @@
 #include <pwd.h>
 #include <grp.h>
 #include <unistd.h>
+#include <sys/sysinfo.h>
 
-Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config, Hydra::Daemon& daemon) : Base(name, config, daemon), plain(name, config, daemon), ssl(name, config, daemon), m_started(false), m_live(0), m_reap_timeout(60), m_timer(0){
+Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config, Hydra::Daemon& daemon) :
+	Base(name, config, daemon),
+	plain(name, config, daemon),
+	ssl(name, config, daemon),
+	m_started(false),
+	m_live(0),
+	m_reap_timeout(30),
+	m_timer(0),
+	m_load_1(15),
+	m_load_5(8),
+	m_load_15(5),
+	m_mem_start(500000),
+	m_mem_reap(4000000),
+	m_swap_start(10000),
+	m_swap_reap(30000){
 
 	// Setup ready to start Apache2.
 
@@ -169,6 +184,60 @@ void Hydra::Server::Apache2::run(boost::asio::io_service& io_service){
 
 }
 
+void Hydra::Server::Apache2::start()
+{
+	if (!m_started)
+	{
+		struct sysinfo sysinf;
+
+		if (sysinfo(&sysinf) != 0)
+		{
+			throw new Hydra::Exception("Hydra->Apache2->Unable to retrieve system info");
+		}
+
+		if (sysinf.loads[0] > (((float) (1 << SI_LOAD_SHIFT)) * m_load_1))
+		{
+			// Load too high.
+			throw new Hydra::Exception("Hydra->Apache2->System exceeding load 1 min max");
+		}
+
+		if (sysinf.loads[1] > (((float) (1 << SI_LOAD_SHIFT)) * m_load_5))
+		{
+			// Load too high.
+			throw new Hydra::Exception("Hydra->Apache2->System exceeding load 5 min max");
+		}
+
+		if (sysinf.loads[2] > (((float) (1 << SI_LOAD_SHIFT)) * m_load_15))
+		{
+			// Load too high.
+			throw new Hydra::Exception("Hydra->Apache2->System exceeding load 15 min max");
+		}
+
+		// We only care when the system is actually short on memory, not meerly when linux has cached the entire disk
+
+		// Work out the number of free KB.
+
+		unsigned long free = (sysinf.freeram + sysinf.bufferram + sysinf.sharedram) * (sysinf.mem_unit / 1024);
+
+		if (free < m_mem_start)
+		{
+			throw new Hydra::Exception("Hydra->Apache2->System running low on memory");
+		}
+
+		// Work the amount of free swap - if the system is running short, back off.
+
+		free = sysinf.freeswap * (sysinf.mem_unit / 1024);
+
+		if (free < m_swap_start)
+		{
+			throw new Hydra::Exception("Hydra->Apache2->System running low on swap");
+		}
+
+		signal("start");
+		m_started = true;
+	}
+}
+
 void Hydra::Server::Apache2::handle(Hydra::Connection::pointer connection){
 
 	// If we aren't yet running the server, we really should.
@@ -179,13 +248,8 @@ void Hydra::Server::Apache2::handle(Hydra::Connection::pointer connection){
 
 		m_live ++;
 		cancel_timeout();
-		std::cout << "+Live: " << m_live << std::endl;
 
-		if (!m_started)
-		{
-			signal("start");
-			m_started = true;
-		}
+		start();
 
 		std::string type = m_config.value_tag("connection", connection->tag());
 
@@ -342,6 +406,13 @@ void Hydra::Server::Apache2::timeout(boost::posix_time::time_duration time)
 	);
 }
 
+void Hydra::Server::Apache2::reap(std::string reason)
+{
+	std::cout << "Reaping Apache2: " << m_name << " due to " << reason << std::endl;
+	signal("stop");
+	m_started = false;
+}
+
 void Hydra::Server::Apache2::handle_timeout(const boost::system::error_code& e)
 {
 	if (e != boost::asio::error::operation_aborted)
@@ -349,9 +420,32 @@ void Hydra::Server::Apache2::handle_timeout(const boost::system::error_code& e)
 		// Shutdown
 		if (m_live == 0)
 		{
-			std::cout << "Reaping Apache2" << std::endl;
-			signal("stop");
-			m_started = false;
+			struct sysinfo sysinf;
+
+			if (sysinfo(&sysinf) != 0)
+			{
+				reap("Unable to get system info");
+			}
+
+			// We only care when the system is actually short on memory, not meerly when linux has cached the entire disk
+
+			// Work out the number of free KB.
+
+			unsigned long free = (sysinf.freeram + sysinf.bufferram + sysinf.sharedram) * (sysinf.mem_unit / 1024);
+
+			if (free < m_mem_reap)
+			{
+				reap("Not enough free memory");
+			}
+
+			// Work the amount of free swap - if the system is running short, back off.
+
+			free = sysinf.freeswap * (sysinf.mem_unit / 1024);
+
+			if (free < m_swap_reap)
+			{
+				reap("Not enough free swap");
+			}
 		}
 	}
 }
