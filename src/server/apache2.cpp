@@ -150,6 +150,8 @@ Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config,
 		}
 	}
 
+	m_environment = m_config.values("environment");
+
 }
 
 Hydra::Server::Apache2::~Apache2(){
@@ -318,7 +320,7 @@ void Hydra::Server::Apache2::signal(std::string signal){
 			strmasscpy(newargv, 8, "HYDRA");
 			newargv[9] = NULL;
 
-			char* newenviron[8];
+			char** newenviron = new char*[m_environment.size() + 8];
 
 			strmasscpy(newenviron, 0, "APACHE_CONFDIR=/etc/apache2");
 			strmasscpy(newenviron, 1, "APACHE_RUN_USER=" + m_user);
@@ -327,7 +329,16 @@ void Hydra::Server::Apache2::signal(std::string signal){
 			strmasscpy(newenviron, 4, "APACHE_RUN_DIR=/var/run/hydra/apache2/" + m_name);
 			strmasscpy(newenviron, 5, "APACHE_LOCK_DIR=/var/lock/hydra/apache2/" + m_name);
 			strmasscpy(newenviron, 6, "APACHE_LOG_DIR=/var/log/hydra/apache2/" + m_name);
-			newenviron[7] = NULL;
+
+			size_t n = 7;
+
+			for(std::list<std::string>::iterator it = m_environment.begin(); it != m_environment.end(); ++it)
+			{
+				strmasscpy(newenviron, n, it->c_str());
+				n++;
+			}
+
+			newenviron[n] = NULL;
 
 			execve("/usr/sbin/apache2", newargv, newenviron);
 

@@ -64,6 +64,8 @@ private:
 	std::string m_group;
 	gid_t m_gid;
 
+	std::list<std::string> m_environment;
+
 	int m_reap_timeout;	// Reaper timeout
 
 	boost::asio::deadline_timer* m_timer;	// Reaper timer
