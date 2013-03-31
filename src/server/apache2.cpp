@@ -150,7 +150,11 @@ Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config,
 		}
 	}
 
-	m_environment = m_config.values("environment");
+	m_environment = m_defaults.values("environment");
+
+	std::list<std::string> environ = m_config.values("environment");
+
+	m_environment.splice(m_environment.end(), environ);
 
 }
 
