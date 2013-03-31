@@ -213,7 +213,7 @@ void Hydra::Server::Apache2::handle(Hydra::Connection::pointer connection){
 	}
 }
 
-void Hydra::Server::Apache2::release(Hydra::Connection::pointer connection)
+void Hydra::Server::Apache2::release(Hydra::Connection* connection)
 {
 	m_live --;
 
