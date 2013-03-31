@@ -18,7 +18,9 @@
 
 #include "exception.hpp"
 
-Hydra::Server::Base::Base(std::string name, Hydra::Config::Section config, Daemon& hydra) : m_hydra(hydra), m_name(name), m_config(config){
+Hydra::Server::Base::Base(std::string name, Hydra::Config::Section config, Hydra::Config::Section defaults, Daemon& hydra) :
+	m_hydra(hydra), m_name(name), m_config(config), m_defaults(defaults)
+{
 
 }
 
@@ -26,31 +28,31 @@ Hydra::Server::Base::~Base(){
 
 }
 
-Hydra::Server::Base* Hydra::Server::Create(std::string name, Hydra::Config::Section config, Hydra::Daemon& hydra){
+Hydra::Server::Base* Hydra::Server::Create(std::string name, Hydra::Config::Section section, Hydra::Config& config, Hydra::Daemon& hydra){
 
-	if(config.value("type") == "proxy"){
+	if(section.value("type") == "proxy"){
 
-		return new Hydra::Server::Proxy(name, config, hydra);
+		return new Hydra::Server::Proxy(name, section, config.section("default:proxy"), hydra);
 
-	} else if (config.value("type") == "sslproxy"){
+	} else if (section.value("type") == "sslproxy"){
 
-		return new Hydra::Server::SslProxy(name, config, hydra);
+		return new Hydra::Server::SslProxy(name, section, config.section("default:sslproxy"), hydra);
 
-	} else if(config.value("type") == "apache2"){
+	} else if(section.value("type") == "apache2"){
 
-		return new Hydra::Server::Apache2(name, config, hydra);
+		return new Hydra::Server::Apache2(name, section, config.section("default:apache2"), hydra);
 
-	} else if(config.value("type") == "redirect"){
+	} else if(section.value("type") == "redirect"){
 
-		return new Hydra::Server::Redirect(name, config, hydra);
+		return new Hydra::Server::Redirect(name, section, config.section("default:redirect"), hydra);
 
-	} else if(config.value("type") == "nginx"){
+	} else if(section.value("type") == "nginx"){
 
-		return new Hydra::Server::Nginx(name, config, hydra);
+		return new Hydra::Server::Nginx(name, section, config.section("default:nginx"), hydra);
 
 	} else {
 
-		throw new Hydra::Exception(std::string("Hydra->Server->Unknown server type: ").append(config.value("type")));
+		throw new Hydra::Exception(std::string("Hydra->Server->Unknown server type: ").append(section.value("type")));
 
 	}
 

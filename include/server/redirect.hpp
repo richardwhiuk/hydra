@@ -21,7 +21,7 @@ namespace Server {
 class Redirect : public Base {
 
 public:
-	Redirect(std::string name, Config::Section config, Daemon& hydra);
+	Redirect(std::string name, Config::Section config, Config::Section defaults, Daemon& hydra);
 
 	virtual ~Redirect();
 

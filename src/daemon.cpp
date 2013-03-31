@@ -53,7 +53,7 @@ void Hydra::Daemon::configure(std::string file){
 
 			} else if (type == "server"){
 
-				m_servers.push_front(Server::Create(it->first.substr(colon+1), it->second, *this));
+				m_servers.push_front(Server::Create(it->first.substr(colon+1), it->second, m_config, *this));
 
 			}
 

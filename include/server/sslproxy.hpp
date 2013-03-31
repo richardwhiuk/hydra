@@ -79,7 +79,7 @@ public:
 
 	};
 
-	SslProxy(std::string name, Config::Section config, Daemon& hydra);
+	SslProxy(std::string name, Config::Section config, Config::Section defaults, Daemon& hydra);
 	virtual ~SslProxy();
 
 	virtual void run(boost::asio::io_service& io_service);

@@ -22,10 +22,10 @@
 #include <unistd.h>
 #include <sys/sysinfo.h>
 
-Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config, Hydra::Daemon& daemon) :
-	Base(name, config, daemon),
-	plain(name, config, daemon),
-	ssl(name, config, daemon),
+Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config, Hydra::Config::Section defaults, Hydra::Daemon& daemon) :
+	Base(name, config, defaults, daemon),
+	plain(name, config, defaults, daemon),
+	ssl(name, config, defaults, daemon),
 	m_started(false),
 	m_live(0),
 	m_reap_timeout(30),

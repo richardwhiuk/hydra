@@ -24,7 +24,7 @@ namespace Server {
 class Apache2 : public Base {
 
 public:
-	Apache2(std::string name, Config::Section config, Daemon& hydra);
+	Apache2(std::string name, Config::Section config, Config::Section defaults, Daemon& hydra);
 	virtual ~Apache2();
 
 	void start();

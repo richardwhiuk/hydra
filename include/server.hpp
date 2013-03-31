@@ -29,7 +29,7 @@ class Base {
 
 public:
 
-	Base(std::string name, Config::Section config, Daemon& hydra);
+	Base(std::string name, Config::Section config, Config::Section defaults, Daemon& hydra);
 	virtual ~Base();
 
 	virtual void run(boost::asio::io_service& io_service) = 0;
@@ -43,10 +43,11 @@ protected:
 	Hydra::Daemon& m_hydra;
 	std::string m_name;
 	Config::Section m_config;
+	Config::Section m_defaults;
 
 };
 
-Base* Create(std::string name, Config::Section config, Daemon& hydra); 
+Base* Create(std::string name, Config::Section section, Config& config, Daemon& hydra); 
 
 }
 

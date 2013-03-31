@@ -19,7 +19,7 @@
 #include <grp.h>
 #include <unistd.h>
 
-Hydra::Server::Redirect::Redirect(std::string name, Hydra::Config::Section config, Hydra::Daemon& daemon) : Base(name, config, daemon){
+Hydra::Server::Redirect::Redirect(std::string name, Hydra::Config::Section config, Hydra::Config::Section defaults, Hydra::Daemon& daemon) : Base(name, config, defaults, daemon){
 
 }
 

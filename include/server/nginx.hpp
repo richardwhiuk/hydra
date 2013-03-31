@@ -25,7 +25,7 @@ namespace Server {
 class Nginx : public Base {
 
 public:
-	Nginx(std::string name, Config::Section config, Daemon& hydra);
+	Nginx(std::string name, Config::Section config, Config::Section defaults, Daemon& hydra);
 	virtual ~Nginx();
 
 	virtual void run(boost::asio::io_service& io_service);

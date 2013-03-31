@@ -20,7 +20,9 @@
 #include <grp.h>
 #include <unistd.h>
 
-Hydra::Server::Nginx::Nginx(std::string name, Hydra::Config::Section config, Hydra::Daemon& daemon) : Base(name, config, daemon), plain(name, config, daemon), ssl(name, config, daemon), m_started(false){
+Hydra::Server::Nginx::Nginx(std::string name, Hydra::Config::Section config, Hydra::Config::Section defaults, Hydra::Daemon& daemon) :
+	Base(name, config, defaults, daemon), plain(name, config, defaults, daemon), ssl(name, config, defaults, daemon), m_started(false)
+{
 
 	// Setup ready to start Nginx.
 

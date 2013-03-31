@@ -12,7 +12,9 @@
 
 #include <boost/bind.hpp>
 
-Hydra::Server::SslProxy::SslProxy(std::string name, Hydra::Config::Section config, Daemon& hydra) : Base(name, config, hydra), m_context(0){
+Hydra::Server::SslProxy::SslProxy(std::string name, Hydra::Config::Section config, Hydra::Config::Section defaults, Daemon& hydra) :
+	Base(name, config, defaults, hydra), m_context(0)
+{
 
 }
 

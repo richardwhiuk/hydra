@@ -74,7 +74,7 @@ public:
 
 	};
 
-	Proxy(std::string name, Config::Section config, Daemon& hydra);
+	Proxy(std::string name, Config::Section config, Config::Section defaults, Daemon& hydra);
 	virtual ~Proxy();
 
 	virtual void run(boost::asio::io_service& io_service);
