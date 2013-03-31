@@ -2,5 +2,5 @@ language: cpp
 compiler:
   - gcc
   - clang
-install: apt-get install libboost-dev libboost-thread-dev libboost-system-dev cmake git libssl-dev
+install: sudo apt-get install libboost-dev libboost-thread-dev libboost-system-dev cmake git libssl-dev
 script: cd build && cmake .. && make && make install
