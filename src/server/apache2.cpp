@@ -22,21 +22,23 @@
 #include <unistd.h>
 #include <sys/sysinfo.h>
 
+#include <iostream>
+
 Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config, Hydra::Config::Section defaults, Hydra::Daemon& daemon) :
 	Base(name, config, defaults, daemon),
 	plain(name, config, defaults, daemon),
 	ssl(name, config, defaults, daemon),
 	m_started(false),
-	m_live(0),
 	m_reap_timeout(30),
 	m_timer(0),
 	m_load_1(15),
 	m_load_5(8),
 	m_load_15(5),
 	m_mem_start(500000),
-	m_mem_reap(4000000),
 	m_swap_start(10000),
-	m_swap_reap(30000){
+	m_mem_reap(4000000),
+	m_swap_reap(30000),
+	m_live(0){
 
 	// Setup ready to start Apache2.
 
