@@ -113,7 +113,7 @@ Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config,
 
 	{
 		std::string dir = "/var/run/hydra/apache2/" + name;
-		
+
 		if(chown(dir.c_str(), m_uid, m_gid)){
 			throw new Exception("Hydra->Server->Apache2->Failed to change directory permissions");
 		}
@@ -121,7 +121,7 @@ Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config,
 
 	{
 		std::string dir = "/var/lock/hydra/apache2/" + name;
-		
+
 		if(chown(dir.c_str(), m_uid, m_gid)){
 			throw new Exception("Hydra->Server->Apache2->Failed to change directory permissions");
 		}
@@ -129,7 +129,7 @@ Hydra::Server::Apache2::Apache2(std::string name, Hydra::Config::Section config,
 
 	{
 		std::string dir = "/var/log/hydra/apache2/" + name;
-		
+
 		if(chown(dir.c_str(), m_uid, m_gid)){
 			throw new Exception("Hydra->Server->Apache2->Failed to change directory permissions");
 		}
@@ -235,12 +235,12 @@ void Hydra::Server::Apache2::signal(std::string signal){
 			break;
 
 		case 0:
-		{	
+		{
 			m_hydra.restore_signals();
-	
+
 			setgid(m_gid);
 			setuid(m_uid);
-			
+
 			char* newargv[10];
 
 			strmasscpy(newargv, 0, "/usr/sbin/apache2");
@@ -252,7 +252,7 @@ void Hydra::Server::Apache2::signal(std::string signal){
 			strmasscpy(newargv, 6, m_config_file);
 			strmasscpy(newargv, 7, "-D");
 			strmasscpy(newargv, 8, "HYDRA");
-			newargv[9] = NULL;	
+			newargv[9] = NULL;
 
 			char* newenviron[8];
 
@@ -313,7 +313,7 @@ void Hydra::Server::Apache2::mkdirs(){
 		dirs.push_back(std::string("/var/log/hydra/apache2/" + m_name.substr(0, pos)));
 
 		start = pos + 1;
-	
+
 	} while(pos != std::string::npos);
 
 	for(std::vector<std::string>::iterator it = dirs.begin(); it != dirs.end(); ++it){
