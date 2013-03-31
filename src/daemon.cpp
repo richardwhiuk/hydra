@@ -98,7 +98,7 @@ void Hydra::Daemon::run(){
 	// Run servers in background threads.
 	for (unsigned int i = 0; i < nthreads; ++i)
 	{
-		threads.push_back(new boost::thread(boost::bind(&boost::asio::io_service::run, &io_service)));
+		threads[i] = new boost::thread(boost::bind(&boost::asio::io_service::run, &io_service));
 	}
 
 	// Restore previous signals.
@@ -119,7 +119,10 @@ void Hydra::Daemon::run(){
 
 	for (std::vector<boost::thread*>::iterator i = threads.begin(); i != threads.end(); ++i)
 	{
-		(*i)->join();
+		if ((*i)->joinable())
+		{
+			(*i)->join();
+		}
 	}
 
 	/**
