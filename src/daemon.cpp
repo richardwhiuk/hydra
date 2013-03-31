@@ -91,8 +91,15 @@ void Hydra::Daemon::run(){
 	sigfillset(&new_mask);
 	pthread_sigmask(SIG_BLOCK, &new_mask, &m_old_mask);
 
-	// Run server in background thread.
-	boost::thread t(boost::bind(&boost::asio::io_service::run, &io_service));
+	unsigned int nthreads = 20;
+
+	std::vector<boost::thread*> threads(nthreads);
+
+	// Run servers in background threads.
+	for (unsigned int i = 0; i < nthreads; ++i)
+	{
+		threads.push_back(new boost::thread(boost::bind(&boost::asio::io_service::run, &io_service)));
+	}
 
 	// Restore previous signals.
 	pthread_sigmask(SIG_SETMASK, &m_old_mask, 0);
@@ -109,7 +116,11 @@ void Hydra::Daemon::run(){
 
 	// Stop the server.
 	io_service.stop();
-	t.join();
+
+	for (std::vector<boost::thread*>::iterator i = threads.begin(); i != threads.end(); ++i)
+	{
+		(*i)->join();
+	}
 
 	/**
 
